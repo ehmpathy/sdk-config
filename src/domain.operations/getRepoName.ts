@@ -1,6 +1,7 @@
-import { readFileSync } from 'fs';
 import { BadRequestError } from 'helpful-errors';
-import { join } from 'path';
+
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 /**
  * .what = read repo name from package.json or use override

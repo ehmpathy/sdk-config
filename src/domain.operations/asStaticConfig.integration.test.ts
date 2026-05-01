@@ -1,7 +1,7 @@
 import { BadRequestError, getError } from 'helpful-errors';
-import { join } from 'path';
 import { given, then, when } from 'test-fns';
 
+import { join } from 'node:path';
 import { asStaticConfig } from './asStaticConfig';
 
 const TEST_CONFIG_DIR = join(__dirname, '../__test_assets__/config');

@@ -27,9 +27,12 @@ describe('genSdkConfigSupplierAwsSecretsManager.integration', () => {
 
   given('[case1] real AWS Secrets Manager secret', () => {
     if (!hasAwsCredentials()) {
-      throw new ConstraintError('AWS credentials required for integration test', {
-        hint: 'set AWS_PROFILE or AWS credentials via keyrack',
-      });
+      throw new ConstraintError(
+        'AWS credentials required for integration test',
+        {
+          hint: 'set AWS_PROFILE or AWS credentials via keyrack',
+        },
+      );
     }
 
     const client = new SecretsManagerClient({ region: 'us-east-1' });
@@ -72,9 +75,12 @@ describe('genSdkConfigSupplierAwsSecretsManager.integration', () => {
 
   given('[case2] supplier scheme is correct', () => {
     if (!hasAwsCredentials()) {
-      throw new ConstraintError('AWS credentials required for integration test', {
-        hint: 'set AWS_PROFILE or AWS credentials via keyrack',
-      });
+      throw new ConstraintError(
+        'AWS credentials required for integration test',
+        {
+          hint: 'set AWS_PROFILE or AWS credentials via keyrack',
+        },
+      );
     }
 
     const client = new SecretsManagerClient({ region: 'us-east-1' });

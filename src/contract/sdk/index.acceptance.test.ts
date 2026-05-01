@@ -6,21 +6,20 @@
  */
 
 import {
+  CreateSecretCommand,
+  SecretsManagerClient,
+} from '@aws-sdk/client-secrets-manager';
+import {
   DeleteParameterCommand,
   PutParameterCommand,
   SSMClient,
 } from '@aws-sdk/client-ssm';
-import {
-  CreateSecretCommand,
-  DeleteSecretCommand,
-  SecretsManagerClient,
-} from '@aws-sdk/client-secrets-manager';
 import { BadRequestError, ConstraintError, getError } from 'helpful-errors';
-import { join } from 'path';
 import { given, then, useBeforeAll, when } from 'test-fns';
 import { getUuid } from 'uuid-fns';
 import { z } from 'zod';
 
+import { join } from 'node:path';
 import {
   genGetConfig,
   genSdkConfigSupplierAwsParameterStore,
@@ -48,8 +47,12 @@ describe('sdk-config', () => {
   // real AWS clients and suppliers
   const ssmClient = new SSMClient({ region: 'us-east-1' });
   const secretsClient = new SecretsManagerClient({ region: 'us-east-1' });
-  const paramSupplier = genSdkConfigSupplierAwsParameterStore({ client: ssmClient });
-  const secretSupplier = genSdkConfigSupplierAwsSecretsManager({ client: secretsClient });
+  const paramSupplier = genSdkConfigSupplierAwsParameterStore({
+    client: ssmClient,
+  });
+  const secretSupplier = genSdkConfigSupplierAwsSecretsManager({
+    client: secretsClient,
+  });
 
   // unique test values
   const testUuid = getUuid();
@@ -67,42 +70,61 @@ describe('sdk-config', () => {
   // setup: create AWS resources
   beforeAll(async () => {
     await Promise.all([
-      ssmClient.send(new PutParameterCommand({
-        Name: testPaths.paramTestSvc,
-        Value: testParamValue,
-        Type: 'String',
-        Overwrite: true,
-      })),
-      ssmClient.send(new PutParameterCommand({
-        Name: testPaths.paramTestSvcProd,
-        Value: testParamValue,
-        Type: 'String',
-        Overwrite: true,
-      })),
+      ssmClient.send(
+        new PutParameterCommand({
+          Name: testPaths.paramTestSvc,
+          Value: testParamValue,
+          Type: 'String',
+          Overwrite: true,
+        }),
+      ),
+      ssmClient.send(
+        new PutParameterCommand({
+          Name: testPaths.paramTestSvcProd,
+          Value: testParamValue,
+          Type: 'String',
+          Overwrite: true,
+        }),
+      ),
     ]);
 
-    for (const secretPath of [testPaths.secretShared, testPaths.secretProdApiKey]) {
+    for (const secretPath of [
+      testPaths.secretShared,
+      testPaths.secretProdApiKey,
+    ]) {
       try {
-        await secretsClient.send(new CreateSecretCommand({
-          Name: secretPath,
-          SecretString: testSecretValue,
-        }));
+        await secretsClient.send(
+          new CreateSecretCommand({
+            Name: secretPath,
+            SecretString: testSecretValue,
+          }),
+        );
       } catch (error) {
         if (!(error instanceof Error)) throw error;
         if (error.name === 'ResourceExistsException') {
           // secret exists, read its current value (IAM may not allow write)
-          const { GetSecretValueCommand } = await import('@aws-sdk/client-secrets-manager');
-          const response = await secretsClient.send(new GetSecretValueCommand({
-            SecretId: secretPath,
-          }));
+          const { GetSecretValueCommand } = await import(
+            '@aws-sdk/client-secrets-manager'
+          );
+          const response = await secretsClient.send(
+            new GetSecretValueCommand({
+              SecretId: secretPath,
+            }),
+          );
           testSecretValue = response.SecretString ?? '';
-        } else if (error.name === 'InvalidRequestException' && error.message.includes('scheduled for deletion')) {
+        } else if (
+          error.name === 'InvalidRequestException' &&
+          error.message.includes('scheduled for deletion')
+        ) {
           // secret was scheduled for deletion by a prior test run
           // wait a few minutes for AWS to complete the delete, then re-run tests
-          throw new ConstraintError(`secret ${secretPath} is scheduled for deletion`, {
-            hint: 'wait a few minutes for AWS to complete the delete, then re-run tests',
-            cause: error,
-          });
+          throw new ConstraintError(
+            `secret ${secretPath} is scheduled for deletion`,
+            {
+              hint: 'wait a few minutes for AWS to complete the delete, then re-run tests',
+              cause: error,
+            },
+          );
         } else {
           throw error;
         }
@@ -114,10 +136,16 @@ describe('sdk-config', () => {
   // .note = secrets are NOT deleted to avoid "scheduled for deletion" conflicts
   //         between test files. secrets are overwritten on subsequent runs.
   afterAll(async () => {
-    await Promise.all([
-      ssmClient.send(new DeleteParameterCommand({ Name: testPaths.paramTestSvc })),
-      ssmClient.send(new DeleteParameterCommand({ Name: testPaths.paramTestSvcProd })),
-    ].map(p => p.catch(() => {})));
+    await Promise.all(
+      [
+        ssmClient.send(
+          new DeleteParameterCommand({ Name: testPaths.paramTestSvc }),
+        ),
+        ssmClient.send(
+          new DeleteParameterCommand({ Name: testPaths.paramTestSvcProd }),
+        ),
+      ].map((p) => p.catch(() => {})),
+    );
   });
 
   const testSchema = z.object({

@@ -1,8 +1,9 @@
-import { readFileSync } from 'fs';
 import { globSync } from 'glob';
 import { BadRequestError } from 'helpful-errors';
 import JSON5 from 'json5';
 import YAML from 'yaml';
+
+import { readFileSync } from 'node:fs';
 
 /**
  * .what = load config file for environment

@@ -1,8 +1,8 @@
 import { BadRequestError, getError } from 'helpful-errors';
-import { join } from 'path';
 import { given, then, useBeforeAll, when } from 'test-fns';
 import { z } from 'zod';
 
+import { join } from 'node:path';
 import { SdkConfigEnvironment } from '../domain.objects/SdkConfigEnvironment';
 import type { SdkConfigSupplier } from '../domain.objects/SdkConfigSupplier';
 import { genGetConfig } from './genGetConfig';
