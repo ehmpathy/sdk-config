@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`genSdkConfigSupplierAwsParameterStore given: [case3] all retries exhausted when: [t0] supply is called then: throws MalfunctionError 1`] = `
+"💥 MalfunctionError: failed to retrieve parameter after retries
+
+{
+  "path": "/svc-x/prod/broken",
+  "retries": 2,
+  "lastError": "persistent failure"
+}"
+`;
+
+exports[`genSdkConfigSupplierAwsParameterStore given: [case4] parameter not found when: [t0] supply is called then: throws BadRequestError 1`] = `
+"BadRequestError: parameter not found
+
+{
+  "path": "/nonexistent/param",
+  "hint": "check if parameter exists in AWS Parameter Store"
+}"
+`;

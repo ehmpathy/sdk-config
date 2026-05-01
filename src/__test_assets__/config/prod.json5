@@ -1,0 +1,12 @@
+{
+  // production config
+  database: {
+    host: 'db.prod.example.com',
+    port: 5432,
+    password: '$.at(aws::param)',
+  },
+  api: {
+    key: '$.at(aws::secret)',
+    url: 'https://api.example.com',
+  },
+}
