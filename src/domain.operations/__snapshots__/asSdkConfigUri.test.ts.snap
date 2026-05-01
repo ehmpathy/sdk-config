@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`asSdkConfigUri given: [case4] invalid format (no $.at() wrapper) when: [t0] parsed then: throws BadRequestError 1`] = `
+"BadRequestError: invalid $.at() format
+
+{
+  "raw": "aws::param",
+  "hint": "expected format: $.at(scheme) or $.at(scheme/explicit/path)"
+}"
+`;
+
+exports[`asSdkConfigUri given: [case5] empty $.at() content when: [t0] parsed then: throws BadRequestError 1`] = `
+"BadRequestError: empty $.at() content
+
+{
+  "raw": "$.at()",
+  "hint": "expected format: $.at(scheme) or $.at(scheme/explicit/path)"
+}"
+`;
+
+exports[`asSdkConfigUri given: [case6] absent scheme separator (::) when: [t0] parsed then: throws BadRequestError 1`] = `
+"BadRequestError: invalid scheme format
+
+{
+  "raw": "$.at(awsparam)",
+  "hint": "scheme must contain :: separator, e.g., aws::param"
+}"
+`;

@@ -1,0 +1,84 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`sdk-config given: [case2] static access without secrets when: [t0] getConfig.static() is called then: raw config with placeholders matches snapshot 1`] = `
+{
+  "api": {
+    "key": "$.at(aws::secret/shared/api/key)",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": "$.at(aws::param)",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`sdk-config given: [case3] schema mismatch in test env when: [t0] getConfig() is called then: error message matches snapshot 1`] = `
+"BadRequestError: config validation failed
+
+{
+  "errors": "database.required_field: Invalid input: expected string, received undefined",
+  "environment": {
+    "access": "test",
+    "server": "local"
+  },
+  "hint": "fix config to match schema"
+}"
+`;
+
+exports[`sdk-config given: [case4] unknown scheme when: [t0] getConfig() is called then: error message matches snapshot 1`] = `
+"BadRequestError: unknown scheme
+
+{
+  "scheme": "aws::param",
+  "raw": "$.at(aws::param)",
+  "hint": "no supplier registered for scheme 'aws::param'. available: none"
+}"
+`;
+
+exports[`sdk-config given: [case5] schema mismatch in prod/cloud environment when: [t0] getConfig() is called then: warn is logged 1`] = `"[sdk-config] validation failed, but continue in prod/cloud:"`;
+
+exports[`sdk-config given: [case6] prep environment failfast on schema mismatch when: [t0] getConfig() is called then: error is thrown like test environment 1`] = `
+"BadRequestError: config validation failed
+
+{
+  "errors": "database.required_field: Invalid input: expected string, received undefined",
+  "environment": {
+    "access": "prep",
+    "server": "local"
+  },
+  "hint": "fix config to match schema"
+}"
+`;
+
+exports[`sdk-config given: [case8] config files not found when: [t0] getConfig() is called then: throws BadRequestError with no files message 1`] = `
+"BadRequestError: no config files found
+
+{
+  "statics": "/home/vlad/git/ehmpathy/sdk-config/src/__test_assets__/config/*.nonexistent",
+  "hint": "check glob pattern matches config files"
+}"
+`;
+
+exports[`sdk-config given: [case8] config files not found when: [t1] getConfig.static() is called then: throws BadRequestError with no files message 1`] = `
+"BadRequestError: no config files found
+
+{
+  "statics": "/home/vlad/git/ehmpathy/sdk-config/src/__test_assets__/config/*.nonexistent",
+  "hint": "check glob pattern matches config files"
+}"
+`;
+
+exports[`sdk-config given: [case9] access level not found when: [t0] getConfig() is called then: throws BadRequestError with access level message 1`] = `
+"BadRequestError: config file not found for access level
+
+{
+  "access": "nonexistent",
+  "files": [
+    "/home/vlad/git/ehmpathy/sdk-config/src/__test_assets__/config/test.yml",
+    "/home/vlad/git/ehmpathy/sdk-config/src/__test_assets__/config/prep.yml"
+  ],
+  "hint": "expected file named nonexistent.yml, nonexistent.yaml, or nonexistent.json5"
+}"
+`;

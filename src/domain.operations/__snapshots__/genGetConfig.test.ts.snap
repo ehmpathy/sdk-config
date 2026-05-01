@@ -1,0 +1,154 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`genGetConfig given: [case1] typed config with secrets when: [t0] getConfig() is called then: config matches snapshot 1`] = `
+{
+  "api": {
+    "key": "secret:/shared/api/key",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": "param:/test-svc/test/database.password",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`genGetConfig given: [case2] static config sync when: [t0] getConfig.static() is called then: static config matches snapshot 1`] = `
+{
+  "api": {
+    "key": "$.at(aws::secret/shared/api/key)",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": "$.at(aws::param)",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`genGetConfig given: [case3] validation by environment - test env fails fast when: [t0] schema mismatch in test env then: throws BadRequestError 1`] = `
+"BadRequestError: config validation failed
+
+{
+  "errors": "database.required_field: Invalid input: expected string, received undefined",
+  "environment": {
+    "access": "test",
+    "server": "local"
+  },
+  "hint": "fix config to match schema"
+}"
+`;
+
+exports[`genGetConfig given: [case4] auto-derive paths when: [t0] placeholder without explicit path then: config matches snapshot 1`] = `
+{
+  "api": {
+    "key": "secret:/shared/api/key",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": "param:/my-service/test/database.password",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`genGetConfig given: [case5] explicit paths when: [t0] placeholder with explicit path then: config matches snapshot 1`] = `
+{
+  "api": {
+    "key": "secret:/shared/api/key",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": "param:/test-svc/test/database.password",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`genGetConfig given: [case6] unknown supplier when: [t0] config uses scheme without registered supplier then: throws BadRequestError 1`] = `
+"BadRequestError: unknown scheme
+
+{
+  "scheme": "aws::param",
+  "raw": "$.at(aws::param)",
+  "hint": "no supplier registered for scheme 'aws::param'. available: none"
+}"
+`;
+
+exports[`genGetConfig given: [case8] repo name from package.json when: [t0] repoName not provided then: config matches snapshot 1`] = `
+{
+  "api": {
+    "key": "secret:/shared/api/key",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": "param:/sdk-config/test/database.password",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`genGetConfig given: [case9] multiple suppliers when: [t0] config uses both aws::param and aws::secret then: config matches snapshot 1`] = `
+{
+  "api": {
+    "key": "secret:/shared/api/key",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": "param:/test-svc/test/database.password",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`genGetConfig given: [case10] file selection by environment when: [t0] environment is prod then: selects prod.json5 config file 1`] = `
+{
+  "api": {
+    "key": "$.at(aws::secret)",
+    "url": "https://api.example.com",
+  },
+  "database": {
+    "host": "db.prod.example.com",
+    "password": "$.at(aws::param)",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`genGetConfig given: [case11] prod/cloud environment with schema mismatch when: [t0] schema mismatch in prod/cloud env then: warns but returns config anyway 1`] = `
+{
+  "api": {
+    "key": "secret:/test-svc/prod/api.key",
+    "url": "https://api.example.com",
+  },
+  "database": {
+    "host": "db.prod.example.com",
+    "password": "param:/test-svc/prod/database.password",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`genGetConfig given: [case12] config files not found when: [t0] statics glob matches no files then: getConfig() throws BadRequestError 1`] = `
+"BadRequestError: no config files found
+
+{
+  "statics": "/home/vlad/git/ehmpathy/sdk-config/src/__test_assets__/config/*.nonexistent",
+  "hint": "check glob pattern matches config files"
+}"
+`;
+
+exports[`genGetConfig given: [case12] config files not found when: [t0] statics glob matches no files then: getConfig.static() throws BadRequestError 1`] = `
+"BadRequestError: no config files found
+
+{
+  "statics": "/home/vlad/git/ehmpathy/sdk-config/src/__test_assets__/config/*.nonexistent",
+  "hint": "check glob pattern matches config files"
+}"
+`;

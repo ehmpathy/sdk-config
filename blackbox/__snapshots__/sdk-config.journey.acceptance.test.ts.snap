@@ -1,0 +1,45 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`sdk-config.journey given: [journey] developer configures application with typed secrets when: [t0] genGetConfig is called with schema and suppliers then: returns a function with .static() and .filled() methods 1`] = `
+[
+  "filled",
+  "static",
+]
+`;
+
+exports[`sdk-config.journey given: [journey] developer configures application with typed secrets when: [t0] genGetConfig is called with schema and suppliers when: [t1] getConfig.static() is called then: raw config with placeholders is returned 1`] = `
+{
+  "api": {
+    "key": "$.at(aws::secret/shared/api/key)",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": "$.at(aws::param)",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`sdk-config.journey given: [journey] developer configures application with typed secrets when: [t4] schema validation fails then: helpful error is thrown with schema context 1`] = `
+"BadRequestError: config validation failed
+
+{
+  "errors": "database.nonexistent: Invalid input: expected string, received undefined",
+  "environment": {
+    "access": "test",
+    "server": "local"
+  },
+  "hint": "fix config to match schema"
+}"
+`;
+
+exports[`sdk-config.journey given: [journey] developer configures application with typed secrets when: [t5] unknown scheme in config then: helpful error is thrown with scheme context 1`] = `
+"BadRequestError: unknown scheme
+
+{
+  "scheme": "aws::param",
+  "raw": "$.at(aws::param)",
+  "hint": "no supplier registered for scheme 'aws::param'. available: none"
+}"
+`;

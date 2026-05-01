@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`asStaticConfig given: [case4] file not found when: [t0] glob matches no files then: throws BadRequestError 1`] = `
+"BadRequestError: no config files found
+
+{
+  "statics": "/home/vlad/git/ehmpathy/sdk-config/src/__test_assets__/config/*.nonexistent",
+  "hint": "check glob pattern matches config files"
+}"
+`;

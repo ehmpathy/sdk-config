@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`getRepoName given: [case3] package.json absent without override when: [t0] called in directory without package.json then: throws BadRequestError 1`] = `
+"BadRequestError: package.json not found
+
+{
+  "path": "/tmp/nonexistent-dir/package.json",
+  "hint": "provide repoName override or ensure package.json exists"
+}"
+`;

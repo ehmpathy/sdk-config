@@ -1,0 +1,7 @@
+database:
+  host: prep-db.example.com
+  port: 5432
+  password: '$.at(aws::param)'
+api:
+  key: '$.at(aws::secret/shared/api/key)'
+  url: https://api.prep.example.com
