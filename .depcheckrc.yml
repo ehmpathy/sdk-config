@@ -1,3 +1,5 @@
+ignorePatterns:
+  - ".agent"
 ignores:
   - depcheck
   - declapract

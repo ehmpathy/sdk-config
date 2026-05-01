@@ -14,12 +14,6 @@ importers:
       '@aws-sdk/client-ssm':
         specifier: 3.1038.0
         version: 3.1038.0
-      '@noble/hashes':
-        specifier: 2.0.1
-        version: 2.0.1
-      domain-glossaries:
-        specifier: 1.0.0
-        version: 1.0.0
       domain-objects:
         specifier: 0.31.9
         version: 0.31.9
@@ -32,9 +26,6 @@ importers:
       json5:
         specifier: 2.2.3
         version: 2.2.3
-      type-fns:
-        specifier: 1.21.0
-        version: 1.21.0
       with-simple-cache:
         specifier: 0.15.3
         version: 0.15.3(@huggingface/transformers@4.2.0)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.6)
@@ -54,9 +45,6 @@ importers:
       '@commitlint/config-conventional':
         specifier: 19.5.0
         version: 19.5.0
-      '@ehmpathy/uni-time':
-        specifier: 1.4.2
-        version: 1.4.2
       '@swc/core':
         specifier: 1.15.3
         version: 1.15.3
