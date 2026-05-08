@@ -22,7 +22,8 @@ export const isFailfastEnvironment = (input: {
   const serverTier = input.environment.server.split('@')[0];
 
   // prod/local failfasts (developer can fix immediately)
-  if (input.environment.config === 'prod' && serverTier === 'local') return true;
+  if (input.environment.config === 'prod' && serverTier === 'local')
+    return true;
 
   // prod/cloud: warn only (service should not crash on schema drift)
   return false;
