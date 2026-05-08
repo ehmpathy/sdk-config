@@ -164,8 +164,8 @@ describe('sdk-config', () => {
 
   given('[case1] full flow with real AWS suppliers', () => {
     const testEnv = new SdkConfigEnvironment({
-      access: 'test',
-      server: 'local',
+      config: 'test',
+      server: 'local@unix',
     });
 
     const getConfig = genGetConfig({
@@ -198,8 +198,8 @@ describe('sdk-config', () => {
 
   given('[case2] static access without secrets', () => {
     const testEnv = new SdkConfigEnvironment({
-      access: 'test',
-      server: 'local',
+      config: 'test',
+      server: 'local@unix',
     });
 
     const getConfig = genGetConfig({
@@ -221,8 +221,8 @@ describe('sdk-config', () => {
 
   given('[case3] schema mismatch in test env', () => {
     const testEnv = new SdkConfigEnvironment({
-      access: 'test',
-      server: 'local',
+      config: 'test',
+      server: 'local@unix',
     });
 
     const badSchema = z.object({
@@ -254,8 +254,8 @@ describe('sdk-config', () => {
 
   given('[case4] unknown scheme', () => {
     const testEnv = new SdkConfigEnvironment({
-      access: 'test',
-      server: 'local',
+      config: 'test',
+      server: 'local@unix',
     });
 
     const getConfig = genGetConfig({
@@ -279,8 +279,8 @@ describe('sdk-config', () => {
   given('[case5] schema mismatch in prod/cloud environment', () => {
     // .note = prod/cloud should warn but not crash per vision spec
     const prodCloudEnv = new SdkConfigEnvironment({
-      access: 'prod',
-      server: 'cloud',
+      config: 'prod',
+      server: 'cloud@aws.lambda',
     });
 
     const badSchema = z.object({
@@ -325,8 +325,8 @@ describe('sdk-config', () => {
 
   given('[case6] prep environment failfast on schema mismatch', () => {
     const prepEnv = new SdkConfigEnvironment({
-      access: 'prep',
-      server: 'local',
+      config: 'prep',
+      server: 'local@unix',
     });
 
     const badSchema = z.object({
@@ -358,8 +358,8 @@ describe('sdk-config', () => {
 
   given('[case7] repo name auto-derived from package.json', () => {
     const testEnv = new SdkConfigEnvironment({
-      access: 'test',
-      server: 'local',
+      config: 'test',
+      server: 'local@unix',
     });
 
     // .note = no repoName provided to test auto-derivation
@@ -388,8 +388,8 @@ describe('sdk-config', () => {
 
   given('[case8] config files not found', () => {
     const testEnv = new SdkConfigEnvironment({
-      access: 'test',
-      server: 'local',
+      config: 'test',
+      server: 'local@unix',
     });
 
     // .note = uses real suppliers but errors before they're called
@@ -421,10 +421,10 @@ describe('sdk-config', () => {
     });
   });
 
-  given('[case9] access level not found', () => {
-    const unknownAccessEnv = new SdkConfigEnvironment({
-      access: 'nonexistent' as 'test',
-      server: 'local',
+  given('[case9] config slug not found', () => {
+    const unknownConfigEnv = new SdkConfigEnvironment({
+      config: 'nonexistent' as 'test',
+      server: 'local@unix',
     });
 
     // .note = uses real suppliers but errors before they're called
@@ -433,15 +433,15 @@ describe('sdk-config', () => {
       statics: `${TEST_CONFIG_DIR}/*.yml`,
       cache: createCache(),
       suppliers: [paramSupplier, secretSupplier],
-      environment: unknownAccessEnv,
+      environment: unknownConfigEnv,
       repoName: 'acceptance-test-svc',
     });
 
     when('[t0] getConfig() is called', () => {
-      then('throws BadRequestError with access level message', async () => {
+      then('throws BadRequestError with config slug message', async () => {
         const error = await getError(async () => getConfig());
         expect(error).toBeInstanceOf(BadRequestError);
-        expect(error.message).toContain('config file not found for access level');
+        expect(error.message).toContain('config file not found for choice');
         expect(error.message).toMatchSnapshot();
       });
     });

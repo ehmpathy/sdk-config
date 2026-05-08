@@ -6,8 +6,8 @@ exports[`sdk-config given: [case2] invalid schema in test environment when: [t0]
 {
   "errors": "database.required_field: Invalid input: expected string, received undefined",
   "environment": {
-    "access": "test",
-    "server": "local"
+    "config": "test",
+    "server": "local@unix"
   },
   "hint": "fix config to match schema"
 }"
@@ -44,7 +44,7 @@ exports[`sdk-config given: [case5] supplier factories export correctly when: [t0
 
 exports[`sdk-config given: [case6] SdkConfigEnvironment export when: [t0] environment is constructed then: environment shape matches snapshot 1`] = `
 SdkConfigEnvironment {
-  "access": "test",
-  "server": "local",
+  "config": "test",
+  "server": "local@unix",
 }
 `;

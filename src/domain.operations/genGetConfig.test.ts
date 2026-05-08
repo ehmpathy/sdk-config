@@ -33,8 +33,8 @@ describe('genGetConfig', () => {
   });
 
   const testEnv = new SdkConfigEnvironment({
-    access: 'test',
-    server: 'local',
+    config: 'test',
+    server: 'local@unix',
   });
 
   const createCache = () => {
@@ -292,8 +292,8 @@ describe('genGetConfig', () => {
 
   given('[case10] file selection by environment', () => {
     const prodEnv = new SdkConfigEnvironment({
-      access: 'prod',
-      server: 'cloud',
+      config: 'prod',
+      server: 'cloud@aws.lambda',
     });
 
     // looser schema for prod config (json5 format)
@@ -332,8 +332,8 @@ describe('genGetConfig', () => {
 
   given('[case11] prod/cloud environment with schema mismatch', () => {
     const prodCloudEnv = new SdkConfigEnvironment({
-      access: 'prod',
-      server: 'cloud',
+      config: 'prod',
+      server: 'cloud@aws.lambda',
     });
 
     const badSchema = z.object({

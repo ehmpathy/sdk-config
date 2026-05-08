@@ -9,11 +9,11 @@ describe('asSdkConfigPath', () => {
     const uri = new SdkConfigUri({ scheme: 'aws::param', explicitPath: null });
 
     when('[t0] path is derived', () => {
-      then('returns /{repoName}/{access}/{keyPath}', () => {
+      then('returns /{repoName}/{choice}/{keyPath}', () => {
         const result = asSdkConfigPath({
           uri,
           repoName: 'svc-x',
-          access: 'prod',
+          choice: 'prod',
           keyPath: 'database.password',
         });
         expect(result).toEqual('/svc-x/prod/database.password');
@@ -32,7 +32,7 @@ describe('asSdkConfigPath', () => {
         const result = asSdkConfigPath({
           uri,
           repoName: 'svc-x',
-          access: 'prod',
+          choice: 'prod',
           keyPath: 'database.password',
         });
         expect(result).toEqual('/shared/db/pass');
@@ -49,7 +49,7 @@ describe('asSdkConfigPath', () => {
           asSdkConfigPath({
             uri,
             repoName: 'svc-x',
-            access: 'prod',
+            choice: 'prod',
             keyPath: '',
           }),
         );
@@ -67,7 +67,7 @@ describe('asSdkConfigPath', () => {
         const result = asSdkConfigPath({
           uri,
           repoName: 'svc-api',
-          access: 'test',
+          choice: 'test',
           keyPath: 'services.stripe.api.secretKey',
         });
         expect(result).toEqual('/svc-api/test/services.stripe.api.secretKey');
@@ -75,27 +75,27 @@ describe('asSdkConfigPath', () => {
     });
   });
 
-  given('[case5] different access levels', () => {
+  given('[case5] different choice values', () => {
     const uri = new SdkConfigUri({ scheme: 'aws::param', explicitPath: null });
 
-    when('[t0] access is test', () => {
+    when('[t0] choice is test', () => {
       then('includes test in path', () => {
         const result = asSdkConfigPath({
           uri,
           repoName: 'svc-x',
-          access: 'test',
+          choice: 'test',
           keyPath: 'db.host',
         });
         expect(result).toEqual('/svc-x/test/db.host');
       });
     });
 
-    when('[t1] access is prep', () => {
+    when('[t1] choice is prep', () => {
       then('includes prep in path', () => {
         const result = asSdkConfigPath({
           uri,
           repoName: 'svc-x',
-          access: 'prep',
+          choice: 'prep',
           keyPath: 'db.host',
         });
         expect(result).toEqual('/svc-x/prep/db.host');

@@ -1,4 +1,5 @@
 import { BadRequestError } from 'helpful-errors';
+import type { EnvironmentConfigSlug } from 'sdk-environment';
 
 import type { SdkConfigUri } from '../domain.objects/SdkConfigUri';
 
@@ -10,7 +11,7 @@ import type { SdkConfigUri } from '../domain.objects/SdkConfigUri';
  * asSdkConfigPath({
  *   uri: { scheme: 'aws::param', explicitPath: null },
  *   repoName: 'svc-x',
- *   access: 'prod',
+ *   choice: 'prod',
  *   keyPath: 'database.password',
  * })
  * // → '/svc-x/prod/database.password'
@@ -19,7 +20,7 @@ import type { SdkConfigUri } from '../domain.objects/SdkConfigUri';
  * asSdkConfigPath({
  *   uri: { scheme: 'aws::param', explicitPath: '/shared/db/pass' },
  *   repoName: 'svc-x',
- *   access: 'prod',
+ *   choice: 'prod',
  *   keyPath: 'database.password',
  * })
  * // → '/shared/db/pass'
@@ -27,7 +28,7 @@ import type { SdkConfigUri } from '../domain.objects/SdkConfigUri';
 export const asSdkConfigPath = (input: {
   uri: SdkConfigUri;
   repoName: string;
-  access: string;
+  choice: EnvironmentConfigSlug;
   keyPath: string;
 }): string => {
   // if explicit path, return it
@@ -38,10 +39,10 @@ export const asSdkConfigPath = (input: {
     throw new BadRequestError('empty keyPath', {
       uri: input.uri,
       repoName: input.repoName,
-      access: input.access,
+      choice: input.choice,
       hint: 'keyPath is required for auto-derived paths',
     });
 
-  // auto-derive: /{repoName}/{access}/{keyPath}
-  return `/${input.repoName}/${input.access}/${input.keyPath}`;
+  // auto-derive: /{repoName}/{choice}/{keyPath}
+  return `/${input.repoName}/${input.choice}/${input.keyPath}`;
 };

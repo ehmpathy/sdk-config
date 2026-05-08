@@ -20,8 +20,8 @@ exports[`sdk-config given: [case3] schema mismatch in test env when: [t0] getCon
 {
   "errors": "database.required_field: Invalid input: expected string, received undefined",
   "environment": {
-    "access": "test",
-    "server": "local"
+    "config": "test",
+    "server": "local@unix"
   },
   "hint": "fix config to match schema"
 }"
@@ -45,8 +45,8 @@ exports[`sdk-config given: [case6] prep environment failfast on schema mismatch 
 {
   "errors": "database.required_field: Invalid input: expected string, received undefined",
   "environment": {
-    "access": "prep",
-    "server": "local"
+    "config": "prep",
+    "server": "local@unix"
   },
   "hint": "fix config to match schema"
 }"
@@ -56,7 +56,7 @@ exports[`sdk-config given: [case8] config files not found when: [t0] getConfig()
 "BadRequestError: no config files found
 
 {
-  "statics": "/home/vlad/git/ehmpathy/sdk-config/src/__test_assets__/config/*.nonexistent",
+  "statics": "/home/vlad/git/ehmpathy/_worktrees/sdk-config.vlad.fix-env/src/__test_assets__/config/*.nonexistent",
   "hint": "check glob pattern matches config files"
 }"
 `;
@@ -65,19 +65,19 @@ exports[`sdk-config given: [case8] config files not found when: [t1] getConfig.s
 "BadRequestError: no config files found
 
 {
-  "statics": "/home/vlad/git/ehmpathy/sdk-config/src/__test_assets__/config/*.nonexistent",
+  "statics": "/home/vlad/git/ehmpathy/_worktrees/sdk-config.vlad.fix-env/src/__test_assets__/config/*.nonexistent",
   "hint": "check glob pattern matches config files"
 }"
 `;
 
-exports[`sdk-config given: [case9] access level not found when: [t0] getConfig() is called then: throws BadRequestError with access level message 1`] = `
-"BadRequestError: config file not found for access level
+exports[`sdk-config given: [case9] config slug not found when: [t0] getConfig() is called then: throws BadRequestError with config slug message 1`] = `
+"BadRequestError: config file not found for choice
 
 {
-  "access": "nonexistent",
+  "choice": "nonexistent",
   "files": [
-    "/home/vlad/git/ehmpathy/sdk-config/src/__test_assets__/config/test.yml",
-    "/home/vlad/git/ehmpathy/sdk-config/src/__test_assets__/config/prep.yml"
+    "/home/vlad/git/ehmpathy/_worktrees/sdk-config.vlad.fix-env/src/__test_assets__/config/test.yml",
+    "/home/vlad/git/ehmpathy/_worktrees/sdk-config.vlad.fix-env/src/__test_assets__/config/prep.yml"
   ],
   "hint": "expected file named nonexistent.yml, nonexistent.yaml, or nonexistent.json5"
 }"

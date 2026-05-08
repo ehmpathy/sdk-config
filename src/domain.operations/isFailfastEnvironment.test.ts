@@ -8,7 +8,7 @@ describe('isFailfastEnvironment', () => {
       then('returns true', () => {
         expect(
           isFailfastEnvironment({
-            environment: { access: 'test', server: 'local' },
+            environment: { config: 'test', server: 'local@unix' },
           }),
         ).toBe(true);
       });
@@ -20,7 +20,7 @@ describe('isFailfastEnvironment', () => {
       then('returns true', () => {
         expect(
           isFailfastEnvironment({
-            environment: { access: 'prep', server: 'cloud' },
+            environment: { config: 'prep', server: 'cloud@aws.lambda' },
           }),
         ).toBe(true);
       });
@@ -32,7 +32,7 @@ describe('isFailfastEnvironment', () => {
       then('returns true', () => {
         expect(
           isFailfastEnvironment({
-            environment: { access: 'prod', server: 'local' },
+            environment: { config: 'prod', server: 'local@unix' },
           }),
         ).toBe(true);
       });
@@ -44,7 +44,7 @@ describe('isFailfastEnvironment', () => {
       then('returns false (warn only)', () => {
         expect(
           isFailfastEnvironment({
-            environment: { access: 'prod', server: 'cloud' },
+            environment: { config: 'prod', server: 'cloud@aws.lambda' },
           }),
         ).toBe(false);
       });

@@ -1,4 +1,5 @@
 import { BadRequestError } from 'helpful-errors';
+import type { EnvironmentConfigSlug } from 'sdk-environment';
 
 import type { SdkConfigSupplier } from '../domain.objects/SdkConfigSupplier';
 import { asSdkConfigPath } from './asSdkConfigPath';
@@ -12,16 +13,16 @@ import { asSdkConfigUri } from './asSdkConfigUri';
  *         with supplier.supply() calls (communicators).
  */
 export const asFilledConfig = async (input: {
-  config: Record<string, unknown>;
+  static: Record<string, unknown>;
   suppliers: SdkConfigSupplier[];
   repoName: string;
-  access: string;
+  choice: EnvironmentConfigSlug;
 }): Promise<Record<string, unknown>> => {
   const result = await fillRecursive({
-    value: input.config,
+    value: input.static,
     suppliers: input.suppliers,
     repoName: input.repoName,
-    access: input.access,
+    choice: input.choice,
     keyPath: '',
   });
   // input is Record<string, unknown>, output preserves that structure
@@ -36,7 +37,7 @@ const fillRecursive = async (input: {
   value: unknown;
   suppliers: SdkConfigSupplier[];
   repoName: string;
-  access: string;
+  choice: EnvironmentConfigSlug;
   keyPath: string;
 }): Promise<unknown> => {
   // handle string values (potential placeholders)
@@ -59,7 +60,7 @@ const fillRecursive = async (input: {
     const path = asSdkConfigPath({
       uri,
       repoName: input.repoName,
-      access: input.access,
+      choice: input.choice,
       keyPath: input.keyPath,
     });
 
@@ -75,7 +76,7 @@ const fillRecursive = async (input: {
           value: item,
           suppliers: input.suppliers,
           repoName: input.repoName,
-          access: input.access,
+          choice: input.choice,
           keyPath: input.keyPath ? `${input.keyPath}.${index}` : `${index}`,
         }),
       ),
@@ -92,7 +93,7 @@ const fillRecursive = async (input: {
           value: val,
           suppliers: input.suppliers,
           repoName: input.repoName,
-          access: input.access,
+          choice: input.choice,
           keyPath: newKeyPath,
         });
         return [key, filledVal] as const;

@@ -34,8 +34,8 @@ exports[`genGetConfig given: [case3] validation by environment - test env fails 
 {
   "errors": "database.required_field: Invalid input: expected string, received undefined",
   "environment": {
-    "access": "test",
-    "server": "local"
+    "config": "test",
+    "server": "local@unix"
   },
   "hint": "fix config to match schema"
 }"
@@ -139,7 +139,7 @@ exports[`genGetConfig given: [case12] config files not found when: [t0] statics 
 "BadRequestError: no config files found
 
 {
-  "statics": "/home/vlad/git/ehmpathy/sdk-config/src/__test_assets__/config/*.nonexistent",
+  "statics": "/home/vlad/git/ehmpathy/_worktrees/sdk-config.vlad.fix-env/src/__test_assets__/config/*.nonexistent",
   "hint": "check glob pattern matches config files"
 }"
 `;
@@ -148,7 +148,7 @@ exports[`genGetConfig given: [case12] config files not found when: [t0] statics 
 "BadRequestError: no config files found
 
 {
-  "statics": "/home/vlad/git/ehmpathy/sdk-config/src/__test_assets__/config/*.nonexistent",
+  "statics": "/home/vlad/git/ehmpathy/_worktrees/sdk-config.vlad.fix-env/src/__test_assets__/config/*.nonexistent",
   "hint": "check glob pattern matches config files"
 }"
 `;
