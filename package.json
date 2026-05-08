@@ -2,7 +2,7 @@
   "name": "sdk-config",
   "author": "ehmpathy",
   "description": "easily access config with secrets from pluggable credential stores",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "repository": "ehmpathy/sdk-config",
   "homepage": "https://github.com/ehmpathy/sdk-config",
   "keywords": [
