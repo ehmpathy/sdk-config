@@ -1,4 +1,8 @@
 import { DomainLiteral } from 'domain-objects';
+import type {
+  EnvironmentConfigSlug,
+  EnvironmentServerTier,
+} from 'sdk-environment';
 
 /**
  * .what = environment configuration for sdk-config
@@ -6,14 +10,14 @@ import { DomainLiteral } from 'domain-objects';
  */
 export interface SdkConfigEnvironment {
   /**
-   * access level: test, prep, or prod
+   * which config environment to load (e.g., 'test', 'prep', 'prod')
    */
-  access: 'test' | 'prep' | 'prod';
+  config: EnvironmentConfigSlug;
 
   /**
-   * server context: local or cloud
+   * where this process executes (e.g., 'local@unix', 'cloud@aws.lambda')
    */
-  server: 'local' | 'cloud';
+  server: EnvironmentServerTier;
 }
 
 export class SdkConfigEnvironment

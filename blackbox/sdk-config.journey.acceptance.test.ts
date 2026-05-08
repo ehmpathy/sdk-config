@@ -119,8 +119,8 @@ describe('sdk-config.journey', () => {
   });
 
   const testEnv = new SdkConfigEnvironment({
-    access: 'test',
-    server: 'local',
+    config: 'test',
+    server: 'local@unix',
   });
 
   const createCache = () => {

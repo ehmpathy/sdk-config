@@ -1,4 +1,5 @@
 import { BadRequestError, getError } from 'helpful-errors';
+import type { EnvironmentConfigSlug } from 'sdk-environment';
 import { given, then, when } from 'test-fns';
 
 import { join } from 'node:path';
@@ -8,11 +9,11 @@ const TEST_CONFIG_DIR = join(__dirname, '../__test_assets__/config');
 
 describe('asStaticConfig', () => {
   given('[case1] yaml config file', () => {
-    when('[t0] loaded for test access', () => {
+    when('[t0] loaded for test config', () => {
       then('returns parsed yaml config', () => {
         const result = asStaticConfig({
           statics: `${TEST_CONFIG_DIR}/*.yml`,
-          access: 'test',
+          choice: 'test',
         });
         expect(result).toMatchObject({
           database: {
@@ -30,11 +31,11 @@ describe('asStaticConfig', () => {
   });
 
   given('[case2] json5 config file', () => {
-    when('[t0] loaded for prod access', () => {
+    when('[t0] loaded for prod config', () => {
       then('returns parsed json5 config', () => {
         const result = asStaticConfig({
           statics: `${TEST_CONFIG_DIR}/*.json5`,
-          access: 'prod',
+          choice: 'prod',
         });
         expect(result).toMatchObject({
           database: {
@@ -53,10 +54,10 @@ describe('asStaticConfig', () => {
 
   given('[case3] multiple config files with wildcard', () => {
     when('[t0] loaded with glob that matches both yml and json5', () => {
-      then('selects correct file by access', () => {
+      then('selects correct file by config', () => {
         const result = asStaticConfig({
           statics: `${TEST_CONFIG_DIR}/*`,
-          access: 'test',
+          choice: 'test',
         });
         expect(result.database).toMatchObject({ host: 'localhost' });
       });
@@ -69,7 +70,7 @@ describe('asStaticConfig', () => {
         const error = await getError(async () =>
           asStaticConfig({
             statics: `${TEST_CONFIG_DIR}/*.nonexistent`,
-            access: 'test',
+            choice: 'test',
           }),
         );
         expect(error).toBeInstanceOf(BadRequestError);
@@ -79,19 +80,17 @@ describe('asStaticConfig', () => {
     });
   });
 
-  given('[case5] access level not found', () => {
-    when('[t0] config for unknown access requested but not found', () => {
+  given('[case5] choice not found', () => {
+    when('[t0] unknown choice requested', () => {
       then('throws BadRequestError', async () => {
         const error = await getError(async () =>
           asStaticConfig({
             statics: `${TEST_CONFIG_DIR}/*`,
-            access: 'unknown',
+            choice: 'unknown' as EnvironmentConfigSlug,
           }),
         );
         expect(error).toBeInstanceOf(BadRequestError);
-        expect(error.message).toContain(
-          'config file not found for access level',
-        );
+        expect(error.message).toContain('config file not found for choice');
       });
     });
   });

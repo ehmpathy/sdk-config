@@ -1,21 +1,22 @@
 import { globSync } from 'glob';
 import { BadRequestError } from 'helpful-errors';
 import JSON5 from 'json5';
+import type { EnvironmentConfigSlug } from 'sdk-environment';
 import YAML from 'yaml';
 
 import { readFileSync } from 'node:fs';
 
 /**
  * .what = load config file for environment
- * .why = find and parse the correct config file based on access level
+ * .why = find and parse the correct config file based on choice
  *
  * @example
- * asStaticConfig({ statics: 'config/*.yml', access: 'prod' })
+ * asStaticConfig({ statics: 'config/*.yml', choice: 'prod' })
  * // → loads config/prod.yml and returns parsed object
  */
 export const asStaticConfig = (input: {
   statics: string;
-  access: string;
+  choice: EnvironmentConfigSlug;
 }): Record<string, unknown> => {
   // glob for config files
   const files = globSync(input.statics);
@@ -25,25 +26,25 @@ export const asStaticConfig = (input: {
       hint: 'check glob pattern matches config files',
     });
 
-  // find file for this access level
-  const accessFile = files.find((file) => {
+  // find file for this choice
+  const choiceFile = files.find((file) => {
     const filename = file.split('/').pop() ?? '';
     const basename = filename.replace(/\.(ya?ml|json5?)$/i, '');
-    return basename === input.access;
+    return basename === input.choice;
   });
 
-  if (!accessFile)
-    throw new BadRequestError('config file not found for access level', {
-      access: input.access,
+  if (!choiceFile)
+    throw new BadRequestError('config file not found for choice', {
+      choice: input.choice,
       files,
-      hint: `expected file named ${input.access}.yml, ${input.access}.yaml, or ${input.access}.json5`,
+      hint: `expected file named ${input.choice}.yml, ${input.choice}.yaml, or ${input.choice}.json5`,
     });
 
   // read file
-  const content = readFileSync(accessFile, 'utf-8');
+  const content = readFileSync(choiceFile, 'utf-8');
 
   // parse based on extension
-  const ext = accessFile.split('.').pop()?.toLowerCase();
+  const ext = choiceFile.split('.').pop()?.toLowerCase();
   const parsed =
     ext === 'yml' || ext === 'yaml'
       ? YAML.parse(content)
@@ -53,7 +54,7 @@ export const asStaticConfig = (input: {
 
   if (parsed === null)
     throw new BadRequestError('unsupported config file extension', {
-      file: accessFile,
+      file: choiceFile,
       extension: ext,
       hint: 'supported: .yml, .yaml, .json5, .json',
     });
@@ -61,7 +62,7 @@ export const asStaticConfig = (input: {
   // validate parsed config is an object
   if (typeof parsed !== 'object' || Array.isArray(parsed))
     throw new BadRequestError('config must be an object', {
-      file: accessFile,
+      file: choiceFile,
       parsed,
       hint: 'config file must contain a yaml/json object, not a primitive or array',
     });

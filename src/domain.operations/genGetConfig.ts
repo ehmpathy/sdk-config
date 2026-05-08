@@ -32,7 +32,7 @@ export const genGetConfig = <TSchema extends z.ZodType>(input: {
   const getStaticConfig = (): Record<string, unknown> => {
     return asStaticConfig({
       statics: input.statics,
-      access: input.environment.access,
+      choice: input.environment.config,
     });
   };
 
@@ -43,10 +43,10 @@ export const genGetConfig = <TSchema extends z.ZodType>(input: {
 
     // fill placeholders
     const filledConfig = await asFilledConfig({
-      config: staticConfig,
+      static: staticConfig,
       suppliers: input.suppliers,
       repoName,
-      access: input.environment.access,
+      choice: input.environment.config,
     });
 
     // validate against schema

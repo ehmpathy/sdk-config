@@ -15,14 +15,14 @@ export const isFailfastEnvironment = (input: {
   environment: SdkConfigEnvironment;
 }): boolean => {
   // test/prep environments always failfast
-  if (input.environment.access === 'test') return true;
-  if (input.environment.access === 'prep') return true;
+  if (input.environment.config === 'test') return true;
+  if (input.environment.config === 'prep') return true;
+
+  // extract server tier from 'local@unix' or 'cloud@aws.lambda' format
+  const serverTier = input.environment.server.split('@')[0];
 
   // prod/local failfasts (developer can fix immediately)
-  if (
-    input.environment.access === 'prod' &&
-    input.environment.server === 'local'
-  )
+  if (input.environment.config === 'prod' && serverTier === 'local')
     return true;
 
   // prod/cloud: warn only (service should not crash on schema drift)

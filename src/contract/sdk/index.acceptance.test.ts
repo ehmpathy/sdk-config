@@ -172,8 +172,8 @@ describe('sdk-config', () => {
 
   given('[case1] yaml config with placeholders', () => {
     const testEnv = new SdkConfigEnvironment({
-      access: 'test',
-      server: 'local',
+      config: 'test',
+      server: 'local@unix',
     });
 
     const getConfig = genGetConfig({
@@ -202,8 +202,8 @@ describe('sdk-config', () => {
 
   given('[case2] invalid schema in test environment', () => {
     const testEnv = new SdkConfigEnvironment({
-      access: 'test',
-      server: 'local',
+      config: 'test',
+      server: 'local@unix',
     });
 
     const badSchema = z.object({
@@ -236,8 +236,8 @@ describe('sdk-config', () => {
 
   given('[case3] static config access', () => {
     const testEnv = new SdkConfigEnvironment({
-      access: 'test',
-      server: 'local',
+      config: 'test',
+      server: 'local@unix',
     });
 
     const getConfig = genGetConfig({
@@ -264,8 +264,8 @@ describe('sdk-config', () => {
 
   given('[case4] environment selection by access', () => {
     const prodEnv = new SdkConfigEnvironment({
-      access: 'prod',
-      server: 'cloud',
+      config: 'prod',
+      server: 'cloud@aws.lambda',
     });
 
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -323,26 +323,26 @@ describe('sdk-config', () => {
 
   given('[case6] SdkConfigEnvironment export', () => {
     when('[t0] environment is constructed', () => {
-      then('accepts valid access/server combinations', () => {
+      then('accepts valid config/server combinations', () => {
         const testLocal = new SdkConfigEnvironment({
-          access: 'test',
-          server: 'local',
+          config: 'test',
+          server: 'local@unix',
         });
-        expect(testLocal.access).toEqual('test');
-        expect(testLocal.server).toEqual('local');
+        expect(testLocal.config).toEqual('test');
+        expect(testLocal.server).toEqual('local@unix');
 
         const prodCloud = new SdkConfigEnvironment({
-          access: 'prod',
-          server: 'cloud',
+          config: 'prod',
+          server: 'cloud@aws.lambda',
         });
-        expect(prodCloud.access).toEqual('prod');
-        expect(prodCloud.server).toEqual('cloud');
+        expect(prodCloud.config).toEqual('prod');
+        expect(prodCloud.server).toEqual('cloud@aws.lambda');
       });
 
       then('environment shape matches snapshot', () => {
         const env = new SdkConfigEnvironment({
-          access: 'test',
-          server: 'local',
+          config: 'test',
+          server: 'local@unix',
         });
         expect(env).toMatchSnapshot();
       });

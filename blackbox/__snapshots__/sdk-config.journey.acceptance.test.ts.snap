@@ -27,8 +27,8 @@ exports[`sdk-config.journey given: [journey] developer configures application wi
 {
   "errors": "database.nonexistent: Invalid input: expected string, received undefined",
   "environment": {
-    "access": "test",
-    "server": "local"
+    "config": "test",
+    "server": "local@unix"
   },
   "hint": "fix config to match schema"
 }"

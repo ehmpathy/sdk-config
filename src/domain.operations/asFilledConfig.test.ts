@@ -16,7 +16,7 @@ describe('asFilledConfig', () => {
   };
 
   given('[case1] single placeholder', () => {
-    const config = {
+    const staticConfig = {
       database: {
         host: 'localhost',
         password: '$.at(aws::param)',
@@ -26,10 +26,10 @@ describe('asFilledConfig', () => {
     when('[t0] filled', () => {
       then('replaces placeholder with supplied value', async () => {
         const result = await asFilledConfig({
-          config,
+          static: staticConfig,
           suppliers: [mockParamSupplier],
           repoName: 'svc-x',
-          access: 'prod',
+          choice: 'prod',
         });
         expect(result).toMatchObject({
           database: {
@@ -42,7 +42,7 @@ describe('asFilledConfig', () => {
   });
 
   given('[case2] multiple placeholders', () => {
-    const config = {
+    const staticConfig = {
       database: {
         password: '$.at(aws::param)',
       },
@@ -54,10 +54,10 @@ describe('asFilledConfig', () => {
     when('[t0] filled', () => {
       then('replaces all placeholders', async () => {
         const result = await asFilledConfig({
-          config,
+          static: staticConfig,
           suppliers: [mockParamSupplier, mockSecretSupplier],
           repoName: 'svc-x',
-          access: 'prod',
+          choice: 'prod',
         });
         expect(result).toMatchObject({
           database: {
@@ -72,7 +72,7 @@ describe('asFilledConfig', () => {
   });
 
   given('[case3] nested placeholders', () => {
-    const config = {
+    const staticConfig = {
       services: {
         stripe: {
           api: {
@@ -85,10 +85,10 @@ describe('asFilledConfig', () => {
     when('[t0] filled', () => {
       then('derives correct nested keyPath', async () => {
         const result = await asFilledConfig({
-          config,
+          static: staticConfig,
           suppliers: [mockSecretSupplier],
           repoName: 'svc-api',
-          access: 'test',
+          choice: 'test',
         });
         expect(result).toMatchObject({
           services: {
@@ -105,7 +105,7 @@ describe('asFilledConfig', () => {
   });
 
   given('[case4] unknown scheme', () => {
-    const config = {
+    const staticConfig = {
       value: '$.at(unknown::scheme)',
     };
 
@@ -113,10 +113,10 @@ describe('asFilledConfig', () => {
       then('throws BadRequestError', async () => {
         const error = await getError(async () =>
           asFilledConfig({
-            config,
+            static: staticConfig,
             suppliers: [mockParamSupplier],
             repoName: 'svc-x',
-            access: 'prod',
+            choice: 'prod',
           }),
         );
         expect(error).toBeInstanceOf(BadRequestError);
@@ -126,7 +126,7 @@ describe('asFilledConfig', () => {
   });
 
   given('[case5] no placeholders (passthrough)', () => {
-    const config = {
+    const staticConfig = {
       database: {
         host: 'localhost',
         port: 5432,
@@ -140,18 +140,18 @@ describe('asFilledConfig', () => {
     when('[t0] filled', () => {
       then('returns config unchanged', async () => {
         const result = await asFilledConfig({
-          config,
+          static: staticConfig,
           suppliers: [mockParamSupplier],
           repoName: 'svc-x',
-          access: 'prod',
+          choice: 'prod',
         });
-        expect(result).toEqual(config);
+        expect(result).toEqual(staticConfig);
       });
     });
   });
 
   given('[case6] explicit path in placeholder', () => {
-    const config = {
+    const staticConfig = {
       shared: {
         dbPassword: '$.at(aws::param/shared/database/password)',
       },
@@ -160,10 +160,10 @@ describe('asFilledConfig', () => {
     when('[t0] filled', () => {
       then('uses explicit path instead of auto-derived', async () => {
         const result = await asFilledConfig({
-          config,
+          static: staticConfig,
           suppliers: [mockParamSupplier],
           repoName: 'svc-x',
-          access: 'prod',
+          choice: 'prod',
         });
         expect(result).toMatchObject({
           shared: {
