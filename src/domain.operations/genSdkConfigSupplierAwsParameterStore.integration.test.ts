@@ -3,10 +3,11 @@ import {
   PutParameterCommand,
   SSMClient,
 } from '@aws-sdk/client-ssm';
-import { ConstraintError } from 'helpful-errors';
+import { ConstraintError, getError } from 'helpful-errors';
 import { given, then, useBeforeAll, when } from 'test-fns';
 import { getUuid } from 'uuid-fns';
 
+import { SupplyAbsentError } from '../domain.objects/SupplyError';
 import { genSdkConfigSupplierAwsParameterStore } from './genSdkConfigSupplierAwsParameterStore';
 
 /**
@@ -66,6 +67,28 @@ describe('genSdkConfigSupplierAwsParameterStore.integration', () => {
         expect(scene.result).toBeDefined();
         expect(typeof scene.result).toEqual('string');
         expect(scene.result).toEqual(testValue);
+      });
+    });
+  });
+
+  given('[case3] a parameter that does not exist in AWS', () => {
+    if (!hasAwsCredentials()) {
+      throw new ConstraintError(
+        'AWS credentials required for integration test',
+        {
+          hint: 'set AWS_PROFILE or AWS credentials via keyrack',
+        },
+      );
+    }
+
+    const client = new SSMClient({ region: 'us-east-1' });
+    const supplier = genSdkConfigSupplierAwsParameterStore({ client });
+    const absentPath = `/ehmpathy/test/sdk-config/absent-${getUuid()}`;
+
+    when('[t0] the absent parameter is read', () => {
+      then('throws a SupplyAbsentError (tolerable not-found)', async () => {
+        const error = await getError(supplier.supply({ path: absentPath }));
+        expect(error).toBeInstanceOf(SupplyAbsentError);
       });
     });
   });

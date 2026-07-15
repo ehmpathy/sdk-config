@@ -1,0 +1,8 @@
+role:
+  cicd:
+    plan:
+      username: '$.at(aws::param)'
+      password: '$.at(aws::param)'
+    apply:
+      username: '$.at(aws::param)'
+      password: '$.at(aws::param)'

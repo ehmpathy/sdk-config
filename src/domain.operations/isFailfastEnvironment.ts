@@ -9,7 +9,8 @@ import type { SdkConfigEnvironment } from '../domain.objects/SdkConfigEnvironmen
  * - prod/local: failfast because developer can fix immediately
  * - prod/cloud: warn only to avoid service crash on schema drift
  *
- * .note = prod/cloud warn-only is intentional per spec (vision line 54, 110, 124)
+ * .note = prod/cloud warn-only is intentional per the vision's "validation"
+ *         env-behavior table (schema drift warns in prod/cloud, never crashes)
  */
 export const isFailfastEnvironment = (input: {
   environment: SdkConfigEnvironment;

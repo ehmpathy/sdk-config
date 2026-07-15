@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`SupplyError taxonomy given: [case1] a SupplyDeniedError constructed with a path when: [t1] its shape is inspected then: the serialized message matches snapshot 1`] = `
+"SupplyDeniedError: access denied to secret
+
+{
+  "path": "/shared/api/key"
+}"
+`;
+
+exports[`SupplyError taxonomy given: [case2] a SupplyAbsentError constructed with a path when: [t1] its shape is inspected then: the serialized message matches snapshot 1`] = `
+"SupplyAbsentError: parameter not found
+
+{
+  "path": "/test-svc/test/database.password"
+}"
+`;
