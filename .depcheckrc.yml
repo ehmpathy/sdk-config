@@ -14,6 +14,7 @@ ignores:
   - rhachet-roles-bhrain
   - rhachet-roles-bhuild
   - rhachet-roles-ehmpathy
+  - rhachet-roles-rhachet
   - "@tsconfig/node20"
   - "@tsconfig/strictest"
   - "@biomejs/biome"
@@ -24,6 +25,7 @@ ignores:
   - tsc-alias
   - yalc
   - rhachet-brains-anthropic
+  - rhachet-brains-fireworksai
   - rhachet-brains-xai
   - "@tsconfig/node-lts-strictest"
   - core-js

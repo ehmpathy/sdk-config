@@ -6,6 +6,11 @@ import {
 import { BadRequestError, MalfunctionError } from 'helpful-errors';
 
 import type { SdkConfigSupplier } from '../domain.objects/SdkConfigSupplier';
+import {
+  SupplyAbsentError,
+  SupplyDeniedError,
+} from '../domain.objects/SupplyError';
+import { isAccessDeniedError } from './isAccessDeniedError';
 
 /**
  * .what = factory for AWS Secrets Manager supplier
@@ -21,6 +26,9 @@ export const genSdkConfigSupplierAwsSecretsManager = (input?: {
   return {
     scheme: 'aws::secret',
     supply: async ({ path }) => {
+      // .note = deliberate mutation — a bounded retry loop is the clearest form
+      //         for an imperative aws sdk call; lastError accumulates the final
+      //         cause across attempts, isolated to this closure.
       let lastError: Error | undefined;
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -45,13 +53,14 @@ export const genSdkConfigSupplierAwsSecretsManager = (input?: {
             hint: 'secret exists but has no value',
           });
         } catch (error) {
+          // absence is definitive and tolerable — no retry, let the schema decide
           // check by name for better mock compatibility
           if (
             error instanceof ResourceNotFoundException ||
             (error instanceof Error &&
               error.name === 'ResourceNotFoundException')
           )
-            throw new BadRequestError('secret not found', {
+            throw new SupplyAbsentError('secret not found', {
               path,
               hint: 'check if secret exists in AWS Secrets Manager',
             });
@@ -59,13 +68,21 @@ export const genSdkConfigSupplierAwsSecretsManager = (input?: {
           // rethrow BadRequestError from empty value check
           if (error instanceof BadRequestError) throw error;
 
-          // store error for potential retry
+          // store error for potential retry (incl. transient AccessDenied)
           lastError = error instanceof Error ? error : new Error(String(error));
 
           // only retry on transient failures
           if (attempt < maxRetries - 1) continue;
         }
       }
+
+      // a denial that survived retries is persistent — tolerable, let the schema decide
+      if (isAccessDeniedError(lastError))
+        throw new SupplyDeniedError('access denied to secret', {
+          path,
+          hint: 'reader role is not granted access to this secret path',
+          cause: lastError,
+        });
 
       throw new MalfunctionError('failed to retrieve secret after retries', {
         path,

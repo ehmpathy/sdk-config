@@ -10,8 +10,8 @@ exports[`genSdkConfigSupplierAwsParameterStore given: [case3] all retries exhaus
 }"
 `;
 
-exports[`genSdkConfigSupplierAwsParameterStore given: [case4] parameter not found when: [t0] supply is called then: throws BadRequestError 1`] = `
-"BadRequestError: parameter not found
+exports[`genSdkConfigSupplierAwsParameterStore given: [case4] parameter not found when: [t0] supply is called then: throws SupplyAbsentError (tolerable) 1`] = `
+"SupplyAbsentError: parameter not found
 
 {
   "path": "/nonexistent/param",

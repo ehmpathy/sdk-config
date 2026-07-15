@@ -1,0 +1,7 @@
+database:
+  host: localhost
+  port: 5432
+  password: '$.at(aws::param)'
+api:
+  key: '$.at(aws::secret/nonexistent/optional/key)'
+  url: https://api.test.example.com

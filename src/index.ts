@@ -3,7 +3,13 @@
  * .why = typed config with pluggable credential suppliers
  */
 
-export type { SdkConfigSupplier } from './contract/sdk';
+export type {
+  SdkConfigSupplier,
+  SupplyOmission,
+  SupplyReason,
+  SupplyTolerance,
+  SupplyVerdict,
+} from './contract/sdk';
 export {
   // main factory
   genGetConfig,
@@ -12,4 +18,8 @@ export {
   genSdkConfigSupplierAwsSecretsManager,
   // domain objects
   SdkConfigEnvironment,
+  // tolerable supply errors (for custom suppliers)
+  SupplyAbsentError,
+  SupplyDeniedError,
+  SupplyError,
 } from './contract/sdk';

@@ -19,7 +19,11 @@ import {
   genGetConfig,
   genSdkConfigSupplierAwsParameterStore,
   genSdkConfigSupplierAwsSecretsManager,
+  type SdkConfigSupplier,
   SdkConfigEnvironment,
+  SupplyAbsentError,
+  SupplyDeniedError,
+  SupplyError,
 } from '@src/index';
 
 const TEST_CONFIG_DIR = join(__dirname, '../src/__test_assets__/config');
@@ -402,12 +406,17 @@ describe('sdk-config', () => {
       repoName: 'acceptance-test-svc',
     });
 
+    // .note = the message echoes the caller's `statics` glob (an absolute
+    //         __dirname-derived path). we redact the repo-root prefix (process.cwd())
+    //         to `<cwd>` so the snapshot keeps its coverage yet stays portable.
     when('[t0] getConfig() is called', () => {
       then('throws BadRequestError with no files message', async () => {
         const error = await getError(async () => getConfig());
         expect(error).toBeInstanceOf(BadRequestError);
         expect(error.message).toContain('no config files found');
-        expect(error.message).toMatchSnapshot();
+        expect(
+          error.message.split(process.cwd()).join('<cwd>'),
+        ).toMatchSnapshot();
       });
     });
 
@@ -416,7 +425,9 @@ describe('sdk-config', () => {
         const error = await getError(async () => getConfig.static());
         expect(error).toBeInstanceOf(BadRequestError);
         expect(error.message).toContain('no config files found');
-        expect(error.message).toMatchSnapshot();
+        expect(
+          error.message.split(process.cwd()).join('<cwd>'),
+        ).toMatchSnapshot();
       });
     });
   });
@@ -437,12 +448,155 @@ describe('sdk-config', () => {
       repoName: 'acceptance-test-svc',
     });
 
+    // .note = the message lists the discovered config `files` as absolute
+    //         __dirname-derived paths. we redact the repo-root prefix (process.cwd())
+    //         to `<cwd>` so the snapshot keeps its coverage yet stays portable.
     when('[t0] getConfig() is called', () => {
       then('throws BadRequestError with config slug message', async () => {
         const error = await getError(async () => getConfig());
         expect(error).toBeInstanceOf(BadRequestError);
         expect(error.message).toContain('config file not found for choice');
-        expect(error.message).toMatchSnapshot();
+        expect(
+          error.message.split(process.cwd()).join('<cwd>'),
+        ).toMatchSnapshot();
+      });
+    });
+  });
+
+  // the feature under test at the BUILT-ARTIFACT level: an optional field whose
+  // supplier reports a TOLERABLE error (denied/absent) is omitted, not fatal; a
+  // required field with the same error hard-throws with the denied path. real AWS
+  // still fills database.password; a custom secret supplier (built from the public
+  // SupplyDeniedError/SupplyAbsentError taxonomy exported from @src/index) reports
+  // the tolerable error for api.key. this proves the tolerance contract holds for a
+  // consumer of the published package, not just the in-source contract layer.
+  const optionalApiSchema = z.object({
+    database: z.object({
+      host: z.string(),
+      port: z.number(),
+      password: z.string(),
+    }),
+    api: z.object({
+      key: z.string().optional(),
+      url: z.string(),
+    }),
+  });
+
+  const deniedSecretSupplier: SdkConfigSupplier = {
+    scheme: 'aws::secret',
+    supply: async ({ path }) => {
+      throw new SupplyDeniedError('access denied to secret', { path });
+    },
+  };
+
+  const absentSecretSupplier: SdkConfigSupplier = {
+    scheme: 'aws::secret',
+    supply: async ({ path }) => {
+      throw new SupplyAbsentError('secret not found', { path });
+    },
+  };
+
+  given('[case10] optional key denied — tolerated, key omitted', () => {
+    const testEnv = new SdkConfigEnvironment({
+      config: 'test',
+      server: 'local@unix',
+    });
+
+    const getConfig = genGetConfig({
+      schema: optionalApiSchema,
+      statics: `${TEST_CONFIG_DIR}/*.yml`,
+      cache: createCache(),
+      suppliers: [paramSupplier, deniedSecretSupplier],
+      environment: testEnv,
+      repoName: 'acceptance-test-svc',
+    });
+
+    when('[t0] getConfig() is called', () => {
+      const result = useBeforeAll(async () => getConfig());
+
+      then('the denied optional key is omitted', () => {
+        expect(result.api.key).toBeUndefined();
+      });
+
+      then('the real param field is still filled from AWS', () => {
+        expect(result.database.password).toEqual(testParamValue);
+      });
+
+      then('the resolved config matches snapshot', () => {
+        // password is a per-run uuid — match its type, snapshot the rest concretely
+        expect(result).toMatchSnapshot({
+          database: { password: expect.any(String) },
+        });
+      });
+    });
+  });
+
+  given('[case11] optional key absent — tolerated, key omitted', () => {
+    const testEnv = new SdkConfigEnvironment({
+      config: 'test',
+      server: 'local@unix',
+    });
+
+    const getConfig = genGetConfig({
+      schema: optionalApiSchema,
+      statics: `${TEST_CONFIG_DIR}/*.yml`,
+      cache: createCache(),
+      suppliers: [paramSupplier, absentSecretSupplier],
+      environment: testEnv,
+      repoName: 'acceptance-test-svc',
+    });
+
+    when('[t0] getConfig() is called', () => {
+      const result = useBeforeAll(async () => getConfig());
+
+      then('the absent optional key is omitted', () => {
+        expect(result.api.key).toBeUndefined();
+      });
+
+      then('the resolved config matches snapshot', () => {
+        expect(result).toMatchSnapshot({
+          database: { password: expect.any(String) },
+        });
+      });
+    });
+  });
+
+  given('[case12] required key denied — hard throw with denied path', () => {
+    const testEnv = new SdkConfigEnvironment({
+      config: 'test',
+      server: 'local@unix',
+    });
+
+    // api.key is REQUIRED here (testSchema); a tolerable error on a required field
+    // is still a hard failure — the denied path surfaces in context.
+    const getConfig = genGetConfig({
+      schema: testSchema,
+      statics: `${TEST_CONFIG_DIR}/*.yml`,
+      cache: createCache(),
+      suppliers: [paramSupplier, deniedSecretSupplier],
+      environment: testEnv,
+      repoName: 'acceptance-test-svc',
+    });
+
+    when('[t0] getConfig() is called', () => {
+      const scene = useBeforeAll(async () => ({
+        error: await getError(async () => getConfig()),
+      }));
+
+      then('throws BadRequestError that names the denied path', () => {
+        expect(scene.error).toBeInstanceOf(BadRequestError);
+        expect(scene.error.message).toContain(
+          'config requires values that could not be read',
+        );
+        expect(scene.error.message).toContain('api.key');
+
+        // snapshot structured metadata, not the message string (which bakes the
+        // cause's stack — absolute paths). mask the denial `cause` by type.
+        const error = scene.error;
+        if (!(error instanceof BadRequestError)) throw error;
+        expect(error.metadata).toMatchSnapshot({
+          blockers: [{ cause: expect.any(SupplyError) }],
+        });
       });
     });
   });

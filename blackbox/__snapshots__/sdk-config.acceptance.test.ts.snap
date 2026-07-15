@@ -56,7 +56,7 @@ exports[`sdk-config given: [case8] config files not found when: [t0] getConfig()
 "BadRequestError: no config files found
 
 {
-  "statics": "/home/vlad/git/ehmpathy/_worktrees/sdk-config.vlad.fix-env/src/__test_assets__/config/*.nonexistent",
+  "statics": "<cwd>/src/__test_assets__/config/*.nonexistent",
   "hint": "check glob pattern matches config files"
 }"
 `;
@@ -65,7 +65,7 @@ exports[`sdk-config given: [case8] config files not found when: [t1] getConfig.s
 "BadRequestError: no config files found
 
 {
-  "statics": "/home/vlad/git/ehmpathy/_worktrees/sdk-config.vlad.fix-env/src/__test_assets__/config/*.nonexistent",
+  "statics": "<cwd>/src/__test_assets__/config/*.nonexistent",
   "hint": "check glob pattern matches config files"
 }"
 `;
@@ -76,9 +76,58 @@ exports[`sdk-config given: [case9] config slug not found when: [t0] getConfig() 
 {
   "choice": "nonexistent",
   "files": [
-    "/home/vlad/git/ehmpathy/_worktrees/sdk-config.vlad.fix-env/src/__test_assets__/config/test.yml",
-    "/home/vlad/git/ehmpathy/_worktrees/sdk-config.vlad.fix-env/src/__test_assets__/config/prep.yml"
+    "<cwd>/src/__test_assets__/config/test.yml",
+    "<cwd>/src/__test_assets__/config/prep.yml"
   ],
   "hint": "expected file named nonexistent.yml, nonexistent.yaml, or nonexistent.json5"
 }"
+`;
+
+exports[`sdk-config given: [case10] optional key denied — tolerated, key omitted when: [t0] getConfig() is called then: the resolved config matches snapshot 1`] = `
+{
+  "api": {
+    "key": undefined,
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": Any<String>,
+    "port": 5432,
+  },
+}
+`;
+
+exports[`sdk-config given: [case11] optional key absent — tolerated, key omitted when: [t0] getConfig() is called then: the resolved config matches snapshot 1`] = `
+{
+  "api": {
+    "key": undefined,
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": Any<String>,
+    "port": 5432,
+  },
+}
+`;
+
+exports[`sdk-config given: [case12] required key denied — hard throw with denied path when: [t0] getConfig() is called then: throws BadRequestError that names the denied path 1`] = `
+{
+  "blockers": [
+    {
+      "cause": Any<SupplyError>,
+      "key": {
+        "path": "api.key",
+      },
+      "reason": "denied",
+      "verdict": "block",
+    },
+  ],
+  "environment": SdkConfigEnvironment {
+    "config": "test",
+    "server": "local@unix",
+  },
+  "errors": "api.key: Invalid input: expected string, received undefined",
+  "hint": "if a key was 'denied', the env was detected to explicitly lack privs to read it — grant it access or mark the field .optional()/.nullish() to tolerate the miss. if a key was 'absent', the source had no value at that path — decide whether to set it or mark the field .optional()/.nullish(). each blocker's cause carries the supplier error behind the miss",
+}
 `;

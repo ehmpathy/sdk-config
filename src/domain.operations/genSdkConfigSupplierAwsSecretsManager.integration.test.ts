@@ -3,10 +3,11 @@ import {
   DeleteSecretCommand,
   SecretsManagerClient,
 } from '@aws-sdk/client-secrets-manager';
-import { ConstraintError } from 'helpful-errors';
+import { ConstraintError, getError } from 'helpful-errors';
 import { given, then, useBeforeAll, when } from 'test-fns';
 import { getUuid } from 'uuid-fns';
 
+import { SupplyAbsentError } from '../domain.objects/SupplyError';
 import { genSdkConfigSupplierAwsSecretsManager } from './genSdkConfigSupplierAwsSecretsManager';
 
 /**
@@ -69,6 +70,28 @@ describe('genSdkConfigSupplierAwsSecretsManager.integration', () => {
         expect(scene.result).toBeDefined();
         expect(typeof scene.result).toEqual('string');
         expect(scene.result).toEqual(testValue);
+      });
+    });
+  });
+
+  given('[case3] a secret that does not exist in AWS', () => {
+    if (!hasAwsCredentials()) {
+      throw new ConstraintError(
+        'AWS credentials required for integration test',
+        {
+          hint: 'set AWS_PROFILE or AWS credentials via keyrack',
+        },
+      );
+    }
+
+    const client = new SecretsManagerClient({ region: 'us-east-1' });
+    const supplier = genSdkConfigSupplierAwsSecretsManager({ client });
+    const absentPath = `ehmpathy/test/sdk-config/absent-${getUuid()}`;
+
+    when('[t0] the absent secret is read', () => {
+      then('throws a SupplyAbsentError (tolerable not-found)', async () => {
+        const error = await getError(supplier.supply({ path: absentPath }));
+        expect(error).toBeInstanceOf(SupplyAbsentError);
       });
     });
   });

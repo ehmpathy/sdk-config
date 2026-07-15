@@ -48,3 +48,216 @@ SdkConfigEnvironment {
   "server": "local@unix",
 }
 `;
+
+exports[`sdk-config given: [case7] optional key whose secret is absent in AWS when: [t0] getConfig() is called then: the resolved config matches snapshot 1`] = `
+{
+  "api": {
+    "key": undefined,
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": Any<String>,
+    "port": 5432,
+  },
+}
+`;
+
+exports[`sdk-config given: [case8] required key whose secret is absent in AWS when: [t0] getConfig() is called then: throws a hard failure with the denied path 1`] = `
+{
+  "blockers": [
+    {
+      "cause": Any<SupplyError>,
+      "key": {
+        "path": "api.key",
+      },
+      "reason": "absent",
+      "verdict": "block",
+    },
+  ],
+  "environment": SdkConfigEnvironment {
+    "config": "test",
+    "server": "local@unix",
+  },
+  "errors": "api.key: Invalid input: expected string, received undefined",
+  "hint": "if a key was 'denied', the env was detected to explicitly lack privs to read it — grant it access or mark the field .optional()/.nullish() to tolerate the miss. if a key was 'absent', the source had no value at that path — decide whether to set it or mark the field .optional()/.nullish(). each blocker's cause carries the supplier error behind the miss",
+}
+`;
+
+exports[`sdk-config given: [case9] absent required leaf under an optional ancestor — hard-throws when: [t0] getConfig() is called then: the hard-throw metadata matches snapshot 1`] = `
+{
+  "blockers": [
+    {
+      "cause": Any<SupplyError>,
+      "key": {
+        "path": "api.key",
+      },
+      "reason": "absent",
+      "verdict": "block",
+    },
+  ],
+  "environment": SdkConfigEnvironment {
+    "config": "test",
+    "server": "local@unix",
+  },
+  "errors": "api.key: Invalid input: expected string, received undefined",
+  "hint": "if a key was 'denied', the env was detected to explicitly lack privs to read it — grant it access or mark the field .optional()/.nullish() to tolerate the miss. if a key was 'absent', the source had no value at that path — decide whether to set it or mark the field .optional()/.nullish(). each blocker's cause carries the supplier error behind the miss",
+}
+`;
+
+exports[`sdk-config given: [case10] absent nullable-only key — hard-throws when: [t0] getConfig() is called then: the hard-throw metadata matches snapshot 1`] = `
+{
+  "blockers": [
+    {
+      "cause": Any<SupplyError>,
+      "key": {
+        "path": "api.key",
+      },
+      "reason": "absent",
+      "verdict": "block",
+    },
+  ],
+  "environment": SdkConfigEnvironment {
+    "config": "test",
+    "server": "local@unix",
+  },
+  "errors": "api.key: Invalid input: expected string, received undefined",
+  "hint": "if a key was 'denied', the env was detected to explicitly lack privs to read it — grant it access or mark the field .optional()/.nullish() to tolerate the miss. if a key was 'absent', the source had no value at that path — decide whether to set it or mark the field .optional()/.nullish(). each blocker's cause carries the supplier error behind the miss",
+}
+`;
+
+exports[`sdk-config given: [case11] nullish field whose secret is absent — omitted (undefined tolerated) when: [t0] getConfig() is called then: the resolved config matches snapshot 1`] = `
+{
+  "api": {
+    "key": undefined,
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": Any<String>,
+    "port": 5432,
+  },
+}
+`;
+
+exports[`sdk-config given: [case12] optional field with a default whose secret is absent — default applies when: [t0] getConfig() is called then: the resolved config matches snapshot 1`] = `
+{
+  "api": {
+    "key": "fallback-key",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": Any<String>,
+    "port": 5432,
+  },
+}
+`;
+
+exports[`sdk-config given: [case13] a custom supplier opts into tolerance via the public SupplyDeniedError when: [t0] getConfig() is called then: the resolved config matches snapshot 1`] = `
+{
+  "api": {
+    "key": undefined,
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": Any<String>,
+    "port": 5432,
+  },
+}
+`;
+
+exports[`sdk-config given: [case14] cicd grant escalation — one shared config, per-job grant, real AWS when: [t0] the plan job runs (GRANT=plan, denied on apply) then: the resolved plan-job config matches snapshot 1`] = `
+{
+  "role": {
+    "cicd": {
+      "apply": {
+        "password": undefined,
+        "username": undefined,
+      },
+      "plan": {
+        "password": Any<String>,
+        "username": Any<String>,
+      },
+    },
+  },
+}
+`;
+
+exports[`sdk-config given: [case14] cicd grant escalation — one shared config, per-job grant, real AWS when: [t1] the apply job runs (GRANT=apply, superset grant) then: the resolved apply-job config matches snapshot 1`] = `
+{
+  "role": {
+    "cicd": {
+      "apply": {
+        "password": Any<String>,
+        "username": Any<String>,
+      },
+      "plan": {
+        "password": Any<String>,
+        "username": Any<String>,
+      },
+    },
+  },
+}
+`;
+
+exports[`sdk-config given: [case14] cicd grant escalation — one shared config, per-job grant, real AWS when: [t2] boundary: plan job denied on the baseline plan grant then: the hard-throw metadata matches snapshot 1`] = `
+{
+  "blockers": [
+    {
+      "cause": Any<SupplyError>,
+      "key": {
+        "path": "role.cicd.plan.username",
+      },
+      "reason": "denied",
+      "verdict": "block",
+    },
+    {
+      "cause": Any<SupplyError>,
+      "key": {
+        "path": "role.cicd.plan.password",
+      },
+      "reason": "denied",
+      "verdict": "block",
+    },
+  ],
+  "environment": SdkConfigEnvironment {
+    "config": "test",
+    "server": "local@unix",
+  },
+  "errors": "role.cicd.plan.username: Invalid input: expected string, received undefined; role.cicd.plan.password: Invalid input: expected string, received undefined",
+  "hint": "if a key was 'denied', the env was detected to explicitly lack privs to read it — grant it access or mark the field .optional()/.nullish() to tolerate the miss. if a key was 'absent', the source had no value at that path — decide whether to set it or mark the field .optional()/.nullish(). each blocker's cause carries the supplier error behind the miss",
+}
+`;
+
+exports[`sdk-config given: [case14] cicd grant escalation — one shared config, per-job grant, real AWS when: [t3] boundary: apply job denied on its required escalated grant then: the hard-throw metadata matches snapshot 1`] = `
+{
+  "blockers": [
+    {
+      "cause": Any<SupplyError>,
+      "key": {
+        "path": "role.cicd.apply.username",
+      },
+      "reason": "denied",
+      "verdict": "block",
+    },
+    {
+      "cause": Any<SupplyError>,
+      "key": {
+        "path": "role.cicd.apply.password",
+      },
+      "reason": "denied",
+      "verdict": "block",
+    },
+  ],
+  "environment": SdkConfigEnvironment {
+    "config": "test",
+    "server": "local@unix",
+  },
+  "errors": "role.cicd.apply.username: Invalid input: expected string, received undefined; role.cicd.apply.password: Invalid input: expected string, received undefined",
+  "hint": "if a key was 'denied', the env was detected to explicitly lack privs to read it — grant it access or mark the field .optional()/.nullish() to tolerate the miss. if a key was 'absent', the source had no value at that path — decide whether to set it or mark the field .optional()/.nullish(). each blocker's cause carries the supplier error behind the miss",
+}
+`;
+
+exports[`sdk-config given: [case15] transient error on an optional field — never masked, through the public api when: [t0] getConfig() is called then: the transient error propagates (not tolerated) 1`] = `"network timeout: transient failure"`;
