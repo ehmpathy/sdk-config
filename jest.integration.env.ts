@@ -3,6 +3,8 @@ import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import util from 'util';
 
+import { useKeyrack } from './src/.test/useKeyrack';
+
 // eslint-disable-next-line no-undef
 jest.setTimeout(90000); // since we're calling downstream apis
 
@@ -30,24 +32,33 @@ if (
 )
   throw new Error(`integration.test is not targeting stage 'test'`);
 
-/**
- * .what = verify that the env has sufficient auth to run the tests if aws is used; otherwise, fail fast
- * .why =
- *   - prevent time wasted waiting on tests to fail due to lack of credentials
- *   - prevent time wasted debugging tests which are failing due to hard-to-read missed credential errors
- */
 const declapractUsePath = join(process.cwd(), 'declapract.use.yml');
 const declapractUseContent = existsSync(declapractUsePath)
   ? readFileSync(declapractUsePath, 'utf8')
   : '';
-const requiresAwsAuth = declapractUseContent.includes('awsAccountId');
-if (
-  requiresAwsAuth &&
-  !(process.env.AWS_PROFILE || process.env.AWS_ACCESS_KEY_ID)
-)
-  throw new Error(
-    'no aws credentials present. please authenticate with aws to run integration tests',
-  );
+
+/**
+ * .what = source credentials from keyrack for the test tier and export them for the aws sdk, in one call.
+ * .why = useKeyrack is the org convention: it sources keyrack (sets AWS_PROFILE) and — for an aws
+ *        consumer — exports the sso profile's static creds so the sdk auths against the target.
+ *
+ *        ⛔ this REPLACED a guard that only ASSERTED `AWS_PROFILE || AWS_ACCESS_KEY_ID` was
+ *           non-empty and never called `keyrack.source()`. on a host with an ambient instance role
+ *           that assert passes while the sdk authenticates against the WRONG ACCOUNT — measured
+ *           here as account 261599400667 (`ahbode-camp-grove-role`) where the keyrack profile
+ *           resolves to 805192865516 (`ehmpathy-demo-for-grove`). it surfaced as an action-level
+ *           AccessDenied that reads exactly like an iam policy gap, so do NOT collapse this back
+ *           to a presence check: a present credential is not a CORRECT credential.
+ *
+ *        ⛔ every argument here is explicit and load-bearing; none is a default to relax.
+ *           - `owner: 'ehmpath'` — always name the rack. the default is the same value today, so
+ *             an implicit call reads identical and drifts the day the default moves.
+ *           - `mode: 'strict'` — keyrack.source has no `unlock` option (rhachet@1.47.5 accepts
+ *             env|owner|key|reach|mode only), so a LOCKED rack grants no key and sets no
+ *             AWS_PROFILE — the precise state that let the ambient role take over above.
+ *             `lenient` swallows that; `strict` exits 2 and names the key to unlock.
+ */
+useKeyrack({ env: 'test', owner: 'ehmpath', mode: 'strict' });
 
 /**
  * .what = verify that the testdb has been provisioned if a databaseUserName is declared

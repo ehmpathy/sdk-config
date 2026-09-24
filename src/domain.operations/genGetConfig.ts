@@ -8,7 +8,6 @@ import type { SupplyTolerance } from '../domain.objects/SupplyTolerance';
 import { asFilledConfig } from './asFilledConfig';
 import { asStaticConfig } from './asStaticConfig';
 import { getAllBlockedSupplies } from './getAllBlockedSupplies';
-import { getRepoName } from './getRepoName';
 import { isFailfastEnvironment } from './isFailfastEnvironment';
 
 /**
@@ -21,27 +20,42 @@ export const genGetConfig = <TSchema extends z.ZodType>(input: {
   cache: SimpleSyncCache<unknown>;
   suppliers: SdkConfigSupplier[];
   environment: SdkConfigEnvironment;
-  repoName?: string;
+
+  /**
+   * ⛔ no `org` key and no `repo` key, by design — both are DECLARED in the
+   *    config (`organization`, `repository`), never passed. an argument mints a
+   *    second source for a value that has one
+   *    (`rule.forbid.combinatorial-explosion`).
+   */
 }): {
   (): Promise<z.infer<TSchema>>;
   static: () => Record<string, unknown>;
   filled: () => Promise<z.infer<TSchema>>;
 } => {
-  // derive repo name
-  const repoName = getRepoName({ override: input.repoName });
-
-  // create the static config loader
-  const getStaticConfig = (): Record<string, unknown> => {
-    return asStaticConfig({
+  // the raw-file accessor — the parsed config, with its path segments dropped.
+  // no SCHEMA validation here; that stays the fill path's
+  const getStaticConfig = (): Record<string, unknown> =>
+    asStaticConfig({
       statics: input.statics,
       choice: input.environment.config,
-    });
-  };
+    }).config;
 
   // create the filled config loader
   const getFilledConfigUncached = async (): Promise<z.infer<TSchema>> => {
-    // load static config
-    const staticConfig = getStaticConfig();
+    // load the static config and its two path segments — here, not at factory
+    // time, which keeps `genGetConfig` a PURE constructor. it once read
+    // package.json at factory time, so an absent file threw at module load.
+    //
+    // it runs ALWAYS, whether or not any uri needs a derive — a lazy check
+    // would let an all-explicit repo boot for months with a bad field
+    const {
+      config: staticConfig,
+      org,
+      repo,
+    } = asStaticConfig({
+      statics: input.statics,
+      choice: input.environment.config,
+    });
 
     // fill placeholders; on a tolerable error (absent/denied) the value is left
     // undefined in place — never fabricated — and the miss (key + reason)
@@ -50,7 +64,8 @@ export const genGetConfig = <TSchema extends z.ZodType>(input: {
     const { filled, omissions } = await asFilledConfig({
       static: staticConfig,
       suppliers: input.suppliers,
-      repoName,
+      org,
+      repo,
       choice: input.environment.config,
     });
 

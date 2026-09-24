@@ -51,7 +51,10 @@ describe('SupplyError taxonomy', () => {
 
   given('[case2] a SupplyAbsentError constructed with a path', () => {
     const error = new SupplyAbsentError('parameter not found', {
-      path: '/test-svc/test/database.password',
+      // .note = four segments, /{org}/{repo}/{choice}/{keyPath}. a derived
+      //         path always carries an org, so a three-segment literal here
+      //         would read as a shape the derive can still produce.
+      path: '/test-org/test-svc/test/database.password',
     });
 
     when('[t0] its class membership is checked', () => {

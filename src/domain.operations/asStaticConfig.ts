@@ -5,19 +5,35 @@ import type { EnvironmentConfigSlug } from 'sdk-environment';
 import YAML from 'yaml';
 
 import { readFileSync } from 'node:fs';
+import type { OrgSlug } from '../domain.objects/OrgSlug';
+import type { RepoSlug } from '../domain.objects/RepoSlug';
+import { getOneOrg } from './getOneOrg';
+import { getOneRepo } from './getOneRepo';
 
 /**
- * .what = load config file for environment
+ * .what = load the config file for an environment, plus the org and repo it names
  * .why = find and parse the correct config file based on choice
+ *
+ * .note = the two path segments ride along, so a parsed config and its
+ *         `{ org, repo }` are ONE value — this is the only route to either, and
+ *         a surface added later inherits both by construction.
+ *
+ * .note = an org has no default, so the config must declare it. a repo's name
+ *         is already in `package.json`, so `repository` is the explicit route
+ *         and that name is the default.
  *
  * @example
  * asStaticConfig({ statics: 'config/*.yml', choice: 'prod' })
- * // → loads config/prod.yml and returns parsed object
+ * // → { config: { … }, org: 'ahbode', repo: 'svc-raisefloor' }
  */
 export const asStaticConfig = (input: {
   statics: string;
   choice: EnvironmentConfigSlug;
-}): Record<string, unknown> => {
+}): {
+  config: Record<string, unknown>;
+  org: OrgSlug;
+  repo: RepoSlug;
+} => {
   // glob for config files
   const files = globSync(input.statics);
   if (!files.length)
@@ -67,5 +83,11 @@ export const asStaticConfig = (input: {
       hint: 'config file must contain a yaml/json object, not a primitive or array',
     });
 
-  return parsed;
+  // read the two segments a derived path leads with — the parse is not done
+  // without them
+  return {
+    config: parsed,
+    org: getOneOrg({ static: parsed }),
+    repo: getOneRepo({ static: parsed, cwd: null }),
+  };
 };

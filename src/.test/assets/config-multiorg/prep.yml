@@ -1,0 +1,18 @@
+# .what = the `prep` choice, declared under org `org-of-prep`
+# .why  = deliberately a DIFFERENT org from its peer `test.yml`. that is what
+#         makes the per-choice read observable: a build that hoisted the org to
+#         factory time, cached it across choices, or read a fixed file would
+#         derive one org for both, and this pair is what goes red.
+#
+# ⛔ do NOT harmonize this org with `test.yml`'s. the DISAGREEMENT is the
+#    assertion — make them agree and `genGetConfig.integration [case29]` passes
+#    whether the org is read per fill or once at factory time.
+organization: org-of-prep
+repository: test-svc
+database:
+  host: prep-db.example.com
+  port: 5432
+  password: '$.at(aws::param)'
+api:
+  key: '$.at(aws::secret/shared/api/key)'
+  url: https://api.prep.example.com

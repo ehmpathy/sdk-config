@@ -1,0 +1,18 @@
+# .what = no `organization`, and EVERY uri is explicit — so no path needs a derive
+# .why  = this is the one fixture that parts the ALWAYS read of F8 from a LAZY
+#         one. a lazy check would read the org only when a bare `$.at()` needs
+#         it; here no value does, so a lazy build boots this config fine and an
+#         ALWAYS build refuses it.
+#
+#         ⇒ without this file, a later author could make the check lazy and
+#           every other test in the repo would stay green.
+#
+# ⛔ do NOT add an `organization` key here, and do NOT replace an explicit path
+#    with a bare `$.at(aws::param)`. either edit silently retires the clamp.
+database:
+  host: localhost
+  port: 5432
+  password: '$.at(aws::param/hand/written/db/password)'
+api:
+  key: '$.at(aws::secret/hand/written/api/key)'
+  url: https://api.test.example.com

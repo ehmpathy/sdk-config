@@ -1,0 +1,218 @@
+{"stone":"1.vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"1.vision","status":"blocked","blocker":"review.self","reason":"review.self required: has-grounded-in-reality"}
+{"stone":"1.vision","status":"promised","reason":"promised review.self: has-grounded-in-reality"}
+{"stone":"1.vision","status":"promised","reason":"promised review.self: has-experience-coverage"}
+{"stone":"1.vision","status":"promised","reason":"promised review.self: has-questioned-requirements"}
+{"stone":"1.vision","status":"promised","reason":"promised review.self: has-questioned-assumptions"}
+{"stone":"1.vision","status":"promised","reason":"promised review.self: has-questioned-questions"}
+{"stone":"1.vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"1.vision","status":"blocked","blocker":"approval","reason":"wait for human approval"}
+{"stone":"1.vision","status":"contemplated","reason":"contemplated review.peer: dimensional-decomposition"}
+{"stone":"1.vision","status":"contemplated","reason":"contemplated review.peer: experience-coverage"}
+{"stone":"1.vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"1.vision","status":"blocked","blocker":"approval","reason":"wait for human approval"}
+{"stone":"1.vision","status":"contemplated","reason":"contemplated review.peer: dimensional-decomposition"}
+{"stone":"1.vision","status":"contemplated","reason":"contemplated review.peer: experience-coverage"}
+{"stone":"1.vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"1.vision","status":"blocked","blocker":"approval","reason":"wait for human approval"}
+{"stone":"1.vision","status":"contemplated","reason":"contemplated review.peer: dimensional-decomposition"}
+{"stone":"1.vision","status":"contemplated","reason":"contemplated review.peer: experience-coverage"}
+{"stone":"1.vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"1.vision","status":"blocked","blocker":"approval","reason":"wait for human approval"}
+{"stone":"1.vision","status":"contemplated","reason":"contemplated review.peer: dimensional-decomposition"}
+{"stone":"1.vision","status":"contemplated","reason":"contemplated review.peer: experience-coverage"}
+{"stone":"1.vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"1.vision","status":"blocked","blocker":"approval","reason":"wait for human approval"}
+{"stone":"1.vision","status":"contemplated","reason":"contemplated review.peer: dimensional-decomposition"}
+{"stone":"1.vision","status":"contemplated","reason":"contemplated review.peer: experience-coverage"}
+{"stone":"1.vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"1.vision","status":"blocked","blocker":"approval","reason":"wait for human approval"}
+{"stone":"1.vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"1.vision","status":"blocked","blocker":"approval","reason":"wait for human approval"}
+{"stone":"1.vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"1.vision","status":"blocked","blocker":"approval","reason":"wait for human approval"}
+{"stone":"1.vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"1.vision","status":"blocked","blocker":"approval","reason":"wait for human approval"}
+{"stone":"1.vision","status":"approved"}
+{"stone":"1.vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"1.vision","status":"passed"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.self","reason":"review.self required: has-pruned-yagni"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: has-pruned-yagni"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: has-pruned-backcompat"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: has-consistent-mechanisms"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: has-consistent-conventions"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: behavior-declaration-coverage"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: behavior-declaration-adherance"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: role-standards-adherance"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.self","reason":"review.self required: role-standards-coverage"}
+{"stone":"5.1.execution.from_vision","status":"promised","reason":"promised review.self: role-standards-coverage"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"malfunction"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: mech-failhides"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: mech-decode-friction"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-opport-decomposition"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-smell-scopeleaks"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-hazards-maintenance"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-hazards-behavior"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: behavior-intent-coverage"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: ergo-friction-hazards"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: enroll-impl-behavior-intent"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: enroll-impl-arch-defects"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"malfunction"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: enroll-impl-arch-defects"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: enroll-impl-behavior-intent"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: repo-rules"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: mech-failhides"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: mech-decode-friction"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-opport-decomposition"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-smell-scopeleaks"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-hazards-maintenance"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-hazards-behavior"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: behavior-intent-coverage"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: ergo-friction-hazards"}
+{"stone":"5.1.execution.from_vision","status":"blocked"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (1 > 0)"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: behavior-intent-coverage"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: mech-failhides"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (2 > 0)"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-opport-decomposition"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-hazards-maintenance"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-hazards-behavior"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: ergo-friction-hazards"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: behavior-intent-coverage"}
+{"stone":"5.1.execution.from_vision","status":"blocked"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: behavior-intent-coverage"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (2 > 0)"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-hazards-maintenance"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: ergo-friction-hazards"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-opport-decomposition"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: behavior-intent-coverage"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (3 > 0)"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: mech-failhides"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-hazards-behavior"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: behavior-intent-coverage"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: ergo-friction-hazards"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (1 > 0)"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: behavior-intent-coverage"}
+{"stone":"5.1.execution.from_vision","status":"contemplated","reason":"contemplated review.peer: arch-hazards-behavior"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"exhausted","reason":"peer reviewer budget exhausted: behavior-intent-coverage"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.peer.undeclared","reason":"peer review awaits absorption: 2 concerns unabsorbed"}
+{"stone":"5.1.execution.from_vision","status":"conceded","reviewer":"behavior-intent-coverage","about":"nitpick.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.1.execution.from_vision._.review.i007.184049271cfdaf6fe3.r008._.given.by_peer.behavior-intent-coverage.md","severity":"better","reason":"conceded review.peer: behavior-intent-coverage nitpick.1 (better)"}
+{"stone":"5.1.execution.from_vision","status":"disputed","reviewer":"behavior-intent-coverage","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.1.execution.from_vision._.review.i007.184049271cfdaf6fe3.r008._.given.by_peer.behavior-intent-coverage.md","fulcrum":".fulcrums/inventory.of=fulcrums.case=F12-acceptance-roundtrip-unproven.md","reason":"disputed review.peer: behavior-intent-coverage blocker.1"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"poured","level":1}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (1 > 0)"}
+{"stone":"5.1.execution.from_vision","status":"disputed","reviewer":"behavior-intent-coverage","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.1.execution.from_vision._.review.i009.37d041c62f27991d0d.r008._.given.by_peer.behavior-intent-coverage.md","fulcrum":".fulcrums/inventory.of=fulcrums.case=F12-acceptance-roundtrip-unproven.md","reason":"disputed review.peer: behavior-intent-coverage blocker.1"}
+{"stone":"5.1.execution.from_vision","status":"conceded","reviewer":"behavior-intent-coverage","about":"nitpick.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.1.execution.from_vision._.review.i009.37d041c62f27991d0d.r008._.given.by_peer.behavior-intent-coverage.md","severity":"better","reason":"conceded review.peer: behavior-intent-coverage nitpick.1 (better)"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: behavior-intent-coverage"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.peer","reason":"nitpicks exceed threshold (11 > 7)"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (3 > 0)"}
+{"stone":"5.1.execution.from_vision","status":"conceded","reviewer":"ergo-friction-hazards","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.1.execution.from_vision._.review.i010.156b4e649e9fe5f4e5.r009._.given.by_peer.ergo-friction-hazards.md","severity":"urgent","reason":"conceded review.peer: ergo-friction-hazards blocker.1 (urgent)"}
+{"stone":"5.1.execution.from_vision","status":"disputed","reviewer":"ergo-friction-hazards","about":"blocker.2","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.1.execution.from_vision._.review.i010.156b4e649e9fe5f4e5.r009._.given.by_peer.ergo-friction-hazards.md","fulcrum":".fulcrums/inventory.of=fulcrums.case=F12-acceptance-roundtrip-unproven.md","reason":"disputed review.peer: ergo-friction-hazards blocker.2"}
+{"stone":"5.1.execution.from_vision","status":"conceded","reviewer":"ergo-friction-hazards","about":"nitpick.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.1.execution.from_vision._.review.i010.156b4e649e9fe5f4e5.r009._.given.by_peer.ergo-friction-hazards.md","severity":"better","reason":"conceded review.peer: ergo-friction-hazards nitpick.1 (better)"}
+{"stone":"5.1.execution.from_vision","status":"disputed","reviewer":"behavior-intent-coverage","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.1.execution.from_vision._.review.i010.156b4e649e9fe5f4e5.r008._.given.by_peer.behavior-intent-coverage.md","fulcrum":".fulcrums/inventory.of=fulcrums.case=F12-acceptance-roundtrip-unproven.md","reason":"disputed review.peer: behavior-intent-coverage blocker.1"}
+{"stone":"5.1.execution.from_vision","status":"conceded","reviewer":"behavior-intent-coverage","about":"nitpick.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.1.execution.from_vision._.review.i010.156b4e649e9fe5f4e5.r008._.given.by_peer.behavior-intent-coverage.md","severity":"better","reason":"conceded review.peer: behavior-intent-coverage nitpick.1 (better)"}
+{"stone":"5.1.execution.from_vision","status":"conceded","reviewer":"behavior-intent-coverage","about":"nitpick.2","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.1.execution.from_vision._.review.i010.156b4e649e9fe5f4e5.r008._.given.by_peer.behavior-intent-coverage.md","severity":"better","reason":"conceded review.peer: behavior-intent-coverage nitpick.2 (better)"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: ergo-friction-hazards"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: behavior-intent-coverage"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (2 > 0)"}
+{"stone":"5.1.execution.from_vision","status":"disputed","reviewer":"ergo-friction-hazards","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.1.execution.from_vision._.review.i011.5ea40c2a8235160fd8.r009._.given.by_peer.ergo-friction-hazards.md","fulcrum":".fulcrums/inventory.of=fulcrums.case=F12-acceptance-roundtrip-unproven.md","reason":"disputed review.peer: ergo-friction-hazards blocker.1"}
+{"stone":"5.1.execution.from_vision","status":"disputed","reviewer":"ergo-friction-hazards","about":"nitpick.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.1.execution.from_vision._.review.i011.5ea40c2a8235160fd8.r009._.given.by_peer.ergo-friction-hazards.md","fulcrum":".fulcrums/inventory.of=fulcrums.case=F12-acceptance-roundtrip-unproven.md","reason":"disputed review.peer: ergo-friction-hazards nitpick.1"}
+{"stone":"5.1.execution.from_vision","status":"disputed","reviewer":"ergo-friction-hazards","about":"nitpick.2","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.1.execution.from_vision._.review.i011.5ea40c2a8235160fd8.r009._.given.by_peer.ergo-friction-hazards.md","fulcrum":".fulcrums/inventory.of=fulcrums.case=F7-org-charset.md","reason":"disputed review.peer: ergo-friction-hazards nitpick.2"}
+{"stone":"5.1.execution.from_vision","status":"disputed","reviewer":"behavior-intent-coverage","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.1.execution.from_vision._.review.i011.5ea40c2a8235160fd8.r008._.given.by_peer.behavior-intent-coverage.md","fulcrum":".fulcrums/inventory.of=fulcrums.case=F12-acceptance-roundtrip-unproven.md","reason":"disputed review.peer: behavior-intent-coverage blocker.1"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: ergo-friction-hazards"}
+{"stone":"5.1.execution.from_vision","status":"absorbed","reason":"absorbed review.peer: behavior-intent-coverage"}
+{"stone":"5.1.execution.from_vision","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.1.execution.from_vision","status":"passed"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.self","reason":"review.self required: has-behavior-coverage"}
+{"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-behavior-coverage"}
+{"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-zero-test-skips"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.self","reason":"review.self required: has-all-tests-passed"}
+{"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-all-tests-passed"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.self","reason":"review.self required: has-preserved-test-intentions"}
+{"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-preserved-test-intentions"}
+{"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-snap-changes-rationalized"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.self","reason":"review.self required: has-critical-paths-frictionless"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.self","reason":"review.self required: has-critical-paths-frictionless"}
+{"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-critical-paths-frictionless"}
+{"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-ergonomics-validated"}
+{"stone":"5.3.verification","status":"promised","reason":"promised review.self: has-fixed-all-gaps"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"poured","level":1}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (4 > 0)"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"ergo-contract-snapshots","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i001.eedacb1eb555068c2e.r002._.given.by_peer.ergo-contract-snapshots.md","severity":"better","reason":"conceded review.peer: ergo-contract-snapshots blocker.1 (better)"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"ergo-acceptance-journey-coverage","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i001.eedacb1eb555068c2e.r004._.given.by_peer.ergo-acceptance-journey-coverage.md","fulcrum":".behavior/v2026_09_08.feat-org-scoped-param-derive/.fulcrums/inventory.of=fulcrums.case=F12-acceptance-roundtrip-unproven.md","reason":"disputed review.peer: ergo-acceptance-journey-coverage blocker.1"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"ergo-acceptance-journey-coverage","about":"nitpick.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i001.eedacb1eb555068c2e.r004._.given.by_peer.ergo-acceptance-journey-coverage.md","severity":"better","reason":"conceded review.peer: ergo-acceptance-journey-coverage nitpick.1 (better)"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"behavior-experience-coverage","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i001.eedacb1eb555068c2e.r005._.given.by_peer.behavior-experience-coverage.md","severity":"better","reason":"conceded review.peer: behavior-experience-coverage blocker.1 (better)"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"behavior-experience-coverage","about":"blocker.2","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i001.eedacb1eb555068c2e.r005._.given.by_peer.behavior-experience-coverage.md","severity":"better","reason":"conceded review.peer: behavior-experience-coverage blocker.2 (better)"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"behavior-experience-coverage","about":"nitpick.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i001.eedacb1eb555068c2e.r005._.given.by_peer.behavior-experience-coverage.md","severity":"better","reason":"conceded review.peer: behavior-experience-coverage nitpick.1 (better)"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"behavior-experience-coverage","about":"nitpick.2","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i001.eedacb1eb555068c2e.r005._.given.by_peer.behavior-experience-coverage.md","severity":"better","reason":"conceded review.peer: behavior-experience-coverage nitpick.2 (better)"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: ergo-contract-snapshots"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: ergo-acceptance-journey-coverage"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: behavior-experience-coverage"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (4 > 0)"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"ergo-contract-snapshots","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i002.6199ef49fdf83834b9.r002._.given.by_peer.ergo-contract-snapshots.md","severity":"better","reason":"conceded review.peer: ergo-contract-snapshots blocker.1 (better)"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"mech-external-contracts","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i002.6199ef49fdf83834b9.r003._.given.by_peer.mech-external-contracts.md","fulcrum":".behavior/v2026_09_08.feat-org-scoped-param-derive/.fulcrums/inventory.of=fulcrums.case=F12-acceptance-roundtrip-unproven.md","reason":"disputed review.peer: mech-external-contracts blocker.1"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"ergo-acceptance-journey-coverage","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i002.6199ef49fdf83834b9.r004._.given.by_peer.ergo-acceptance-journey-coverage.md","severity":"better","reason":"conceded review.peer: ergo-acceptance-journey-coverage blocker.1 (better)"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"mech-test-scope-purity","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i002.6199ef49fdf83834b9.r009._.given.by_peer.mech-test-scope-purity.md","severity":"better","reason":"conceded review.peer: mech-test-scope-purity blocker.1 (better)"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: ergo-contract-snapshots"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: mech-external-contracts"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: ergo-acceptance-journey-coverage"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: mech-test-scope-purity"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (1 > 0)"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"ergo-contract-snapshots","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i003.e4428b39ee94334d19.r002._.given.by_peer.ergo-contract-snapshots.md","severity":"better","reason":"conceded review.peer: ergo-contract-snapshots blocker.1 (better)"}
+{"stone":"5.3.verification","status":"disputed","reviewer":"ergo-contract-snapshots","about":"nitpick.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i003.e4428b39ee94334d19.r002._.given.by_peer.ergo-contract-snapshots.md","fulcrum":".behavior/v2026_09_08.feat-org-scoped-param-derive/.fulcrums/inventory.of=fulcrums.case=F14-repo-refusals-op-grade-only.md","reason":"disputed review.peer: ergo-contract-snapshots nitpick.1"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: ergo-contract-snapshots"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: behavior-experience-coverage"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: mech-given-when-then"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: ergo-acceptance-journey-coverage"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: ergo-snapshot-visual-blemishes"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (1 > 0)"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"ergo-contract-snapshots","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i004.93c754dda4ba5df704.r002._.given.by_peer.ergo-contract-snapshots.md","severity":"better","reason":"conceded review.peer: ergo-contract-snapshots blocker.1 (better)"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: ergo-contract-snapshots"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (1 > 0)"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"ergo-contract-snapshots","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i005.087922f92e02f68c7b.r002._.given.by_peer.ergo-contract-snapshots.md","severity":"better","reason":"conceded review.peer: ergo-contract-snapshots blocker.1 (better)"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: ergo-contract-snapshots"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.peer","reason":"blockers exceed threshold (1 > 0)"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"ergo-contract-snapshots","about":"blocker.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i006.7ea28877297f816e8a.r002._.given.by_peer.ergo-contract-snapshots.md","severity":"better","reason":"conceded review.peer: ergo-contract-snapshots blocker.1 (better)"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: ergo-contract-snapshots"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"poured","level":3}
+{"stone":"5.3.verification","status":"malfunction"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.peer.unabsorbed","reason":"peer review awaits feedbackAbsorption: enroll-verif-snapshot-blemishes, enroll-verif-snapshot-coverage, enroll-verif-test-intent"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: enroll-verif-snapshot-coverage"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: enroll-verif-snapshot-blemishes"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: enroll-verif-test-intent"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"blocked","blocker":"review.peer","reason":"nitpicks exceed threshold (8 > 7)"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"enroll-verif-snapshot-blemishes","about":"nitpick.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i008.2138c4171e27ab3b95.r011._.given.by_peer.enroll-verif-snapshot-blemishes.md","severity":"better","reason":"conceded review.peer: enroll-verif-snapshot-blemishes nitpick.1 (better)"}
+{"stone":"5.3.verification","status":"conceded","reviewer":"enroll-verif-test-intent","about":"nitpick.1","given":"/home/camper/git/ehmpathy/_worktrees/sdk-config.beav.feat-org-scoped-param-derive/.behavior/v2026_09_08.feat-org-scoped-param-derive/.reviews/peer/5.3.verification._.review.i008.2138c4171e27ab3b95.r012._.given.by_peer.enroll-verif-test-intent.md","severity":"better","reason":"conceded review.peer: enroll-verif-test-intent nitpick.1 (better)"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: enroll-verif-snapshot-coverage"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: enroll-verif-snapshot-blemishes"}
+{"stone":"5.3.verification","status":"absorbed","reason":"absorbed review.peer: enroll-verif-test-intent"}
+{"stone":"5.3.verification","status":"arrived","reason":"entered guard reviews"}
+{"stone":"5.3.verification","status":"passed"}

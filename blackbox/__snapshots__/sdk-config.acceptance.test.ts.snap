@@ -1,5 +1,19 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`sdk-config given: [case1] full flow with real AWS suppliers when: [t0] getConfig() is called then: and the FILLED SHAPE a caller receives is pinned, masked 1`] = `
+{
+  "api": {
+    "key": Any<String>,
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": Any<String>,
+    "port": 5432,
+  },
+}
+`;
+
 exports[`sdk-config given: [case2] static access without secrets when: [t0] getConfig.static() is called then: raw config with placeholders matches snapshot 1`] = `
 {
   "api": {
@@ -11,6 +25,8 @@ exports[`sdk-config given: [case2] static access without secrets when: [t0] getC
     "password": "$.at(aws::param)",
     "port": 5432,
   },
+  "organization": "test-org",
+  "repository": "test-svc",
 }
 `;
 
@@ -56,7 +72,7 @@ exports[`sdk-config given: [case8] config files not found when: [t0] getConfig()
 "BadRequestError: no config files found
 
 {
-  "statics": "<cwd>/src/__test_assets__/config/*.nonexistent",
+  "statics": "<cwd>/src/.test/assets/config/*.nonexistent",
   "hint": "check glob pattern matches config files"
 }"
 `;
@@ -65,7 +81,7 @@ exports[`sdk-config given: [case8] config files not found when: [t1] getConfig.s
 "BadRequestError: no config files found
 
 {
-  "statics": "<cwd>/src/__test_assets__/config/*.nonexistent",
+  "statics": "<cwd>/src/.test/assets/config/*.nonexistent",
   "hint": "check glob pattern matches config files"
 }"
 `;
@@ -76,8 +92,8 @@ exports[`sdk-config given: [case9] config slug not found when: [t0] getConfig() 
 {
   "choice": "nonexistent",
   "files": [
-    "<cwd>/src/__test_assets__/config/test.yml",
-    "<cwd>/src/__test_assets__/config/prep.yml"
+    "<cwd>/src/.test/assets/config/test.yml",
+    "<cwd>/src/.test/assets/config/prep.yml"
   ],
   "hint": "expected file named nonexistent.yml, nonexistent.yaml, or nonexistent.json5"
 }"
@@ -130,4 +146,65 @@ exports[`sdk-config given: [case12] required key denied — hard throw with deni
   "errors": "api.key: Invalid input: expected string, received undefined",
   "hint": "if a key was 'denied', the env was detected to explicitly lack privs to read it — grant it access or mark the field .optional()/.nullish() to tolerate the miss. if a key was 'absent', the source had no value at that path — decide whether to set it or mark the field .optional()/.nullish(). each blocker's cause carries the supplier error behind the miss",
 }
+`;
+
+exports[`sdk-config given: [case13] the derive is org-scoped end-to-end against real aws when: [t0] getConfig() is called with no org argument then: and the FILLED SHAPE a caller receives is pinned, masked 1`] = `
+{
+  "api": {
+    "key": undefined,
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": Any<String>,
+    "port": 5432,
+  },
+}
+`;
+
+exports[`sdk-config given: [case13] the derive is org-scoped end-to-end against real aws when: [t0] getConfig() is called with no org argument then: the ADDRESS SET the derive produced is pinned 1`] = `
+[
+  "/test-org/test-svc/test/database.password",
+]
+`;
+
+exports[`sdk-config given: [case14] a config with no organization refuses to boot when: [t0] getConfig() is called then: it throws, and names the field plus its ONE remedy 1`] = `
+"BadRequestError: config lacks a required \`organization\` field
+
+{
+  "hint": "every sdk-config consumer must declare a top-level \`organization\` — it becomes the first segment of every auto-derived path, so two orgs' repos of the same name cannot collide in one param store. it is required even where every uri is explicit: the field is read on every load, so the day someone adds one bare \`$.at()\` it cannot silently derive an un-namespaced path. add \`\\"organization\\": \\"your-org\\"\` to the config. to opt a repo out of a shared namespace, declare a placeholder such as \`\\"organization\\": \\"_\\"\` — there is no way to derive without one"
+}"
+`;
+
+exports[`sdk-config given: [case15] a MALFORMED organization refuses to boot when: [t0] getConfig() is called then: it throws — and names a DIFFERENT remedy than [case14] 1`] = `
+"BadRequestError: org cannot be a placeholder
+
+{
+  "source": "the \`organization\` field declared in the config",
+  "declared": "$.at(aws::param/org)",
+  "hint": "the \`organization\` field declared in the config must hold a literal value, never a $.at() placeholder. the org is read before any supplier runs — it is what decides the path a supplier reads — so it cannot itself be supplied. declare the literal"
+}"
+`;
+
+exports[`sdk-config given: [case15] a MALFORMED organization refuses to boot when: [t1] the organization is a MAP, not a literal then: it throws, and names THIS malformation 1`] = `
+"BadRequestError: org must be a literal string
+
+{
+  "source": "the \`organization\` field declared in the config",
+  "declared": {
+    "name": "ahbode"
+  },
+  "declaredType": "object",
+  "hint": "the \`organization\` field declared in the config must hold a literal string, such as \\"ahbode\\". a placeholder is not filled here — the org is read before any supplier runs, so it cannot itself be supplied"
+}"
+`;
+
+exports[`sdk-config given: [case15] a MALFORMED organization refuses to boot when: [t2] the organization is BLANK — whitespace only then: it throws, and names THIS malformation 1`] = `
+"BadRequestError: org is empty
+
+{
+  "source": "the \`organization\` field declared in the config",
+  "declared": "   ",
+  "hint": "the \`organization\` field declared in the config must hold a non-empty value. to opt a repo out of a shared namespace, declare a placeholder such as \\"_\\" — an empty org would splice a blank segment and derive an unreachable path"
+}"
 `;

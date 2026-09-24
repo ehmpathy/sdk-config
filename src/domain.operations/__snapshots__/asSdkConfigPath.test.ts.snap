@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`asSdkConfigPath given: [case3] empty keyPath with auto-derive when: [t0] path is derived then: the error carries the org, so the whole address is legible 1`] = `
+"BadRequestError: empty keyPath
+
+{
+  "uri": {
+    "scheme": "aws::param",
+    "explicitPath": null
+  },
+  "org": "ahbode",
+  "repo": "svc-x",
+  "choice": "prod",
+  "hint": "keyPath is required for auto-derived paths"
+}"
+`;
+
+exports[`asSdkConfigPath given: [case7] the '_' placeholder org — the only opt-out when: [t0] org is '_' then: the SHAPE is pinned, so a reviewer reads F5 in the diff 1`] = `"/_/svc-x/prep/db.host"`;

@@ -1,0 +1,24 @@
+# .what = an `organization` declared as whitespace only
+# .why  = this is the ONE malformed value a `typeof` check cannot catch — it IS
+#         a literal string, so the literal guard passes it and only the
+#         empty-guard after the trim refuses it. the sentence a config author
+#         meets is `org is empty`, and it had no orchestration-grade case.
+#
+#         ⇒ drop the `.trim()` in `asOrgSegment` and this config boots: the org
+#           splices a blank segment and derives `/   /svc-x/test/…`, a name aws
+#           refuses. so this fixture is the clamp on that trim.
+#
+# .note = the quotes carry weight rather than ride along. unquoted, yaml reads a
+#         whitespace scalar as `null`, which reaches the literal-string throw
+#         instead and proves the wrong sentence.
+#
+# ⛔ do NOT give this a non-blank `organization`, and do NOT unquote the value.
+#    either edit silently retires the clamp.
+organization: '   '
+database:
+  host: localhost
+  port: 5432
+  password: '$.at(aws::param)'
+api:
+  key: '$.at(aws::secret/shared/api/key)'
+  url: https://api.test.example.com

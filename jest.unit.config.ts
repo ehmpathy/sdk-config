@@ -31,6 +31,8 @@ const config: Config = {
     '!**/*.acceptance.test.ts',
     '!**/*.integration.test.ts',
     '!**/.yalc/**',
+    // .note = `.agent/` holds the rmsafe RECYCLE BIN — see jest.integration.config.ts
+    '!**/.agent/**',
   ],
   setupFilesAfterEnv: ['./jest.unit.env.ts'],
 

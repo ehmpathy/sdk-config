@@ -1,0 +1,21 @@
+# .what = the journey suite's OWN config, identical to `config/` but for the repo
+# .why  = both blackbox suites write REAL aws params at their derived paths and
+#         delete them in `afterAll`. jest runs test FILES in parallel workers,
+#         so a shared derived path means one suite reaps the other's param
+#         mid-run — a flake that reads as an `absent` supply defect.
+#
+#         ⇒ a distinct `repository` gives the journey suite a distinct namespace,
+#           which is exactly what its old `repo: 'my-app'` argument gave it
+#           before the argument was cut.
+#
+# ⛔ do NOT point the journey suite back at `config/`, and do NOT set this to
+#    `test-svc`. the difference IS the isolation.
+organization: test-org
+repository: journey-app
+database:
+  host: localhost
+  port: 5432
+  password: '$.at(aws::param)'
+api:
+  key: '$.at(aws::secret/shared/api/key)'
+  url: https://api.test.example.com

@@ -10,17 +10,44 @@ import {
   SupplyDeniedError,
   SupplyError,
 } from '../domain.objects/SupplyError';
+import type { SupplyTolerance } from '../domain.objects/SupplyTolerance';
 import { genGetConfig } from './genGetConfig';
 
-const TEST_CONFIG_DIR = join(__dirname, '../__test_assets__/config');
+const TEST_CONFIG_DIR = join(__dirname, '../.test/assets/config');
+
+/**
+ * .what = redact the host path from a message, so its snapshot is portable
+ * .why = the repo refusals carry the absolute `package.json` path, which is the
+ *        useful half of the message in production and the one half that cannot
+ *        go into a `.snap` (`rule.require.hermetic-tests`).
+ *
+ * .note = the marker is `<cwd>`, the word every other redaction site in this
+ *         repo uses for this same value (`r6 nitpick.1`, i003). ⛔ do NOT coin
+ *         a second word for `process.cwd()`.
+ *
+ * .note = a TWIN of this lives in `getOneRepo.integration.test.ts`. two copies
+ *         is the correct call (`rule.prefer.wet-over-dry` — wait for three); a
+ *         THIRD site is the trigger to promote one shared test helper.
+ */
+const asPortableMessage = (input: { message: string }): string =>
+  input.message.split(process.cwd()).join('<cwd>');
 
 describe('genGetConfig', () => {
-  const mockParamSupplier: SdkConfigSupplier = {
+  // .note = FAKES, never mocks. `rule.forbid.integration.mocks` bars a mock at
+  //         this grade, and these are neither — a supplier is a declared
+  //         extension point of the public api, so to pass one is to USE the
+  //         contract rather than to stub around it. each echoes the path it was
+  //         handed, which is what makes the derived ADDRESS assertable without
+  //         an aws round trip.
+  // .why   = the real-aws coverage for the supplier boundary itself lives in
+  //          genSdkConfigSupplierAws*.integration and the acceptance suites.
+  //          what this file grades is genGetConfig's ORCHESTRATION.
+  const fakeParamSupplier: SdkConfigSupplier = {
     scheme: 'aws::param',
     supply: async ({ path }) => `param:${path}`,
   };
 
-  const mockSecretSupplier: SdkConfigSupplier = {
+  const fakeSecretSupplier: SdkConfigSupplier = {
     scheme: 'aws::secret',
     supply: async ({ path }) => `secret:${path}`,
   };
@@ -58,16 +85,15 @@ describe('genGetConfig', () => {
         schema: testSchema,
         statics: `${TEST_CONFIG_DIR}/*.yml`,
         cache: createCache(),
-        suppliers: [mockParamSupplier, mockSecretSupplier],
+        suppliers: [fakeParamSupplier, fakeSecretSupplier],
         environment: testEnv,
-        repoName: 'test-svc',
       });
 
       const result = useBeforeAll(async () => getConfig());
 
       then('returns typed config with filled secrets', () => {
         expect(result.database.password).toEqual(
-          'param:/test-svc/test/database.password',
+          'param:/test-org/test-svc/test/database.password',
         );
         expect(result.api.key).toEqual('secret:/shared/api/key');
       });
@@ -84,9 +110,8 @@ describe('genGetConfig', () => {
         schema: testSchema,
         statics: `${TEST_CONFIG_DIR}/*.yml`,
         cache: createCache(),
-        suppliers: [mockParamSupplier],
+        suppliers: [fakeParamSupplier],
         environment: testEnv,
-        repoName: 'test-svc',
       });
 
       then('returns raw config with placeholders', () => {
@@ -119,9 +144,8 @@ describe('genGetConfig', () => {
         schema: badSchema,
         statics: `${TEST_CONFIG_DIR}/*.yml`,
         cache: createCache(),
-        suppliers: [mockParamSupplier, mockSecretSupplier],
+        suppliers: [fakeParamSupplier, fakeSecretSupplier],
         environment: testEnv,
-        repoName: 'test-svc',
       });
 
       then('throws BadRequestError', async () => {
@@ -139,16 +163,16 @@ describe('genGetConfig', () => {
         schema: testSchema,
         statics: `${TEST_CONFIG_DIR}/*.yml`,
         cache: createCache(),
-        suppliers: [mockParamSupplier, mockSecretSupplier],
+        suppliers: [fakeParamSupplier, fakeSecretSupplier],
         environment: testEnv,
-        repoName: 'my-service',
       });
 
       const result = useBeforeAll(async () => getConfig());
 
-      then('path is auto-derived from repo + access + keyPath', () => {
+      then('path is auto-derived from org + repo + choice + keyPath', () => {
+        // the fixture declares `repository: test-svc`
         expect(result.database.password).toEqual(
-          'param:/my-service/test/database.password',
+          'param:/test-org/test-svc/test/database.password',
         );
       });
 
@@ -164,9 +188,8 @@ describe('genGetConfig', () => {
         schema: testSchema,
         statics: `${TEST_CONFIG_DIR}/*.yml`,
         cache: createCache(),
-        suppliers: [mockParamSupplier, mockSecretSupplier],
+        suppliers: [fakeParamSupplier, fakeSecretSupplier],
         environment: testEnv,
-        repoName: 'test-svc',
       });
 
       const result = useBeforeAll(async () => getConfig());
@@ -190,7 +213,6 @@ describe('genGetConfig', () => {
         cache: createCache(),
         suppliers: [], // no suppliers registered
         environment: testEnv,
-        repoName: 'test-svc',
       });
 
       then('throws BadRequestError', async () => {
@@ -230,7 +252,6 @@ describe('genGetConfig', () => {
         cache,
         suppliers: [countedSupplier, countedSecretSupplier],
         environment: testEnv,
-        repoName: 'test-svc',
       });
 
       then('supplier called only once (cache hit on second call)', async () => {
@@ -247,41 +268,14 @@ describe('genGetConfig', () => {
     });
   });
 
-  given('[case8] repo name from package.json', () => {
-    when('[t0] repoName not provided', () => {
-      const getConfig = genGetConfig({
-        schema: testSchema,
-        statics: `${TEST_CONFIG_DIR}/*.yml`,
-        cache: createCache(),
-        suppliers: [mockParamSupplier, mockSecretSupplier],
-        environment: testEnv,
-        // repoName not provided - should read from package.json
-      });
-
-      const result = useBeforeAll(async () => getConfig());
-
-      then('repo name derived from package.json', () => {
-        // package.json has name: "sdk-config"
-        expect(result.database.password).toEqual(
-          'param:/sdk-config/test/database.password',
-        );
-      });
-
-      then('config matches snapshot', () => {
-        expect(result).toMatchSnapshot();
-      });
-    });
-  });
-
   given('[case9] multiple suppliers', () => {
     when('[t0] config uses both aws::param and aws::secret', () => {
       const getConfig = genGetConfig({
         schema: testSchema,
         statics: `${TEST_CONFIG_DIR}/*.yml`,
         cache: createCache(),
-        suppliers: [mockParamSupplier, mockSecretSupplier],
+        suppliers: [fakeParamSupplier, fakeSecretSupplier],
         environment: testEnv,
-        repoName: 'test-svc',
       });
 
       const result = useBeforeAll(async () => getConfig());
@@ -321,9 +315,8 @@ describe('genGetConfig', () => {
         schema: prodSchema,
         statics: `${TEST_CONFIG_DIR}/*`, // matches both yml and json5
         cache: createCache(),
-        suppliers: [mockParamSupplier, mockSecretSupplier],
+        suppliers: [fakeParamSupplier, fakeSecretSupplier],
         environment: prodEnv,
-        repoName: 'test-svc',
       });
 
       then('selects prod.json5 config file', () => {
@@ -363,9 +356,8 @@ describe('genGetConfig', () => {
         schema: badSchema,
         statics: `${TEST_CONFIG_DIR}/*`,
         cache: createCache(),
-        suppliers: [mockParamSupplier, mockSecretSupplier],
+        suppliers: [fakeParamSupplier, fakeSecretSupplier],
         environment: prodCloudEnv,
-        repoName: 'test-svc',
       });
 
       then('warns but returns config anyway', async () => {
@@ -393,9 +385,8 @@ describe('genGetConfig', () => {
         schema: testSchema,
         statics: `${TEST_CONFIG_DIR}/*.nonexistent`,
         cache: createCache(),
-        suppliers: [mockParamSupplier],
+        suppliers: [fakeParamSupplier],
         environment: testEnv,
-        repoName: 'test-svc',
       });
 
       // .note = the message echoes the caller's `statics` glob, which in tests is an
@@ -449,9 +440,8 @@ describe('genGetConfig', () => {
         schema: schemaOptionalKey,
         statics: `${TEST_CONFIG_DIR}/*.yml`,
         cache: createCache(),
-        suppliers: [mockParamSupplier, deniedSecretSupplier],
+        suppliers: [fakeParamSupplier, deniedSecretSupplier],
         environment: testEnv,
-        repoName: 'test-svc',
       });
 
       const result = useBeforeAll(async () => getConfig());
@@ -463,7 +453,7 @@ describe('genGetConfig', () => {
       then('the readable fields are still filled', () => {
         expect(result.api.url).toEqual('https://api.test.example.com');
         expect(result.database.password).toEqual(
-          'param:/test-svc/test/database.password',
+          'param:/test-org/test-svc/test/database.password',
         );
       });
 
@@ -480,9 +470,8 @@ describe('genGetConfig', () => {
         schema: testSchema,
         statics: `${TEST_CONFIG_DIR}/*.yml`,
         cache: createCache(),
-        suppliers: [mockParamSupplier, deniedSecretSupplier],
+        suppliers: [fakeParamSupplier, deniedSecretSupplier],
         environment: testEnv,
-        repoName: 'test-svc',
       });
 
       const scene = useBeforeAll(async () => ({
@@ -528,9 +517,8 @@ describe('genGetConfig', () => {
           schema: testSchema,
           statics: `${TEST_CONFIG_DIR}/*`,
           cache: createCache(),
-          suppliers: [mockParamSupplier, deniedSecretSupplier],
+          suppliers: [fakeParamSupplier, deniedSecretSupplier],
           environment: prodCloudEnv,
-          repoName: 'test-svc',
         });
 
         const scene = useBeforeAll(async () => ({
@@ -584,9 +572,8 @@ describe('genGetConfig', () => {
           schema: schemaOptionalApiNode,
           statics: `${TEST_CONFIG_DIR}/*.yml`,
           cache: createCache(),
-          suppliers: [mockParamSupplier, deniedSecretSupplier],
+          suppliers: [fakeParamSupplier, deniedSecretSupplier],
           environment: testEnv,
-          repoName: 'test-svc',
         });
 
         const scene = useBeforeAll(async () => ({
@@ -637,9 +624,8 @@ describe('genGetConfig', () => {
         schema: schemaNullableKey,
         statics: `${TEST_CONFIG_DIR}/*.yml`,
         cache: createCache(),
-        suppliers: [mockParamSupplier, deniedSecretSupplier],
+        suppliers: [fakeParamSupplier, deniedSecretSupplier],
         environment: testEnv,
-        repoName: 'test-svc',
       });
 
       const scene = useBeforeAll(async () => ({
@@ -688,9 +674,8 @@ describe('genGetConfig', () => {
           schema: schemaDefaultKey,
           statics: `${TEST_CONFIG_DIR}/*.yml`,
           cache: createCache(),
-          suppliers: [mockParamSupplier, deniedSecretSupplier],
+          suppliers: [fakeParamSupplier, deniedSecretSupplier],
           environment: testEnv,
-          repoName: 'test-svc',
         });
 
         const result = useBeforeAll(async () => getConfig());
@@ -729,9 +714,8 @@ describe('genGetConfig', () => {
         schema: schemaNullishKey,
         statics: `${TEST_CONFIG_DIR}/*.yml`,
         cache: createCache(),
-        suppliers: [mockParamSupplier, deniedSecretSupplier],
+        suppliers: [fakeParamSupplier, deniedSecretSupplier],
         environment: testEnv,
-        repoName: 'test-svc',
       });
 
       const result = useBeforeAll(async () => getConfig());
@@ -777,9 +761,8 @@ describe('genGetConfig', () => {
           schema: schemaOptionalKey,
           statics: `${TEST_CONFIG_DIR}/*.yml`,
           cache: createCache(),
-          suppliers: [mockParamSupplier, absentSecretSupplier],
+          suppliers: [fakeParamSupplier, absentSecretSupplier],
           environment: testEnv,
-          repoName: 'test-svc',
         });
 
         const result = useBeforeAll(async () => getConfig());
@@ -800,10 +783,7 @@ describe('genGetConfig', () => {
   // over `plan`: plan is the baseline grant (readable by BOTH jobs), apply is
   // the escalation (readable ONLY by the apply job). so plan.* is always
   // required and only the escalated apply.* leaves toggle optional.
-  const TEST_CONFIG_CICD_DIR = join(
-    __dirname,
-    '../__test_assets__/config-cicd',
-  );
+  const TEST_CONFIG_CICD_DIR = join(__dirname, '../.test/assets/config-cicd');
 
   // build the schema for the escalation. tolerance is marked on each escalated
   // LEAF (.optional()), not the ancestor block — so a denied apply leaf is left
@@ -849,7 +829,6 @@ describe('genGetConfig', () => {
           cache: createCache(),
           suppliers: [genGrantScopedSupplier('apply')],
           environment: testEnv,
-          repoName: 'test-svc',
         });
 
         const result = useBeforeAll(async () => getConfig());
@@ -877,7 +856,6 @@ describe('genGetConfig', () => {
             cache: createCache(),
             suppliers: [genGrantScopedSupplier(null)],
             environment: testEnv,
-            repoName: 'test-svc',
           });
 
           const result = useBeforeAll(async () => getConfig());
@@ -898,7 +876,6 @@ describe('genGetConfig', () => {
           cache: createCache(),
           suppliers: [genGrantScopedSupplier('plan')],
           environment: testEnv,
-          repoName: 'test-svc',
         });
 
         then('getConfig hard-throws (baseline denial is fatal)', async () => {
@@ -919,7 +896,6 @@ describe('genGetConfig', () => {
             cache: createCache(),
             suppliers: [genGrantScopedSupplier('apply')],
             environment: testEnv,
-            repoName: 'test-svc',
           });
 
           then(
@@ -965,9 +941,8 @@ describe('genGetConfig', () => {
           schema: schemaOptionalKey,
           statics: `${TEST_CONFIG_DIR}/*.yml`,
           cache: createCache(),
-          suppliers: [emptyParamSupplier, mockSecretSupplier],
+          suppliers: [emptyParamSupplier, fakeSecretSupplier],
           environment: testEnv,
-          repoName: 'test-svc',
         });
 
         then(
@@ -1003,7 +978,6 @@ describe('genGetConfig', () => {
           cache: createCache(),
           suppliers: [deniedParamSupplier, deniedSecretSupplier],
           environment: testEnv,
-          repoName: 'test-svc',
         });
 
         const scene = useBeforeAll(async () => ({
@@ -1065,9 +1039,8 @@ describe('genGetConfig', () => {
           schema: schemaOptionalKey,
           statics: `${TEST_CONFIG_DIR}/*.yml`,
           cache: createCache(),
-          suppliers: [mockParamSupplier, transientSecretSupplier],
+          suppliers: [fakeParamSupplier, transientSecretSupplier],
           environment: testEnv,
-          repoName: 'test-svc',
         });
 
         then('the transient error propagates (not tolerated)', async () => {
@@ -1104,9 +1077,8 @@ describe('genGetConfig', () => {
         schema: schemaWithDrift,
         statics: `${TEST_CONFIG_DIR}/*.yml`,
         cache: createCache(),
-        suppliers: [mockParamSupplier, deniedSecretSupplier],
+        suppliers: [fakeParamSupplier, deniedSecretSupplier],
         environment: testEnv,
-        repoName: 'test-svc',
       });
 
       const scene = useBeforeAll(async () => ({
@@ -1133,6 +1105,929 @@ describe('genGetConfig', () => {
         expect(error.metadata).toMatchSnapshot({
           blockers: [{ cause: expect.any(SupplyError) }],
         });
+      });
+    });
+  });
+
+  // ── the org segment ──────────────────────────────────────────────────────
+  // a config dir that deliberately declares NO `organization`. every other
+  // fixture declares one, so this is the only way to reach the state a required
+  // field forbids. ⛔ do not add the key to it.
+  const TEST_CONFIG_NOORG_DIR = join(__dirname, '../.test/assets/config-noorg');
+
+  // the three repo fixtures, one per route the repo can take. ⛔ do not add a
+  // `repository` key to the first, unscope the second, or fill the third —
+  // each file's whole job is the value it carries. see [case32].
+  const TEST_CONFIG_NOREPO_DIR = join(
+    __dirname,
+    '../.test/assets/config-norepo',
+  );
+  const TEST_CONFIG_SCOPEDREPO_DIR = join(
+    __dirname,
+    '../.test/assets/config-scopedrepo',
+  );
+  const TEST_CONFIG_BADREPO_BLANK_DIR = join(
+    __dirname,
+    '../.test/assets/config-badrepo-blank',
+  );
+
+  // no org, and every uri EXPLICIT — so no path needs a derive. ⛔ do not add
+  // the key, and do not swap an explicit path for a bare one. see [case28] [t3].
+  const TEST_CONFIG_NOORG_ALLEXPLICIT_DIR = join(
+    __dirname,
+    '../.test/assets/config-noorg-allexplicit',
+  );
+
+  // the same all-explicit shape, but the org is PRESENT and MALFORMED. the pair
+  // parts two different builds: the fixture above catches a LAZY call, this one
+  // catches a lazy VALIDATION — a build that calls getOneOrg always but defers
+  // its literal check passes that one and fails only here. [case28] [t4].
+  const TEST_CONFIG_BADORG_ALLEXPLICIT_DIR = join(
+    __dirname,
+    '../.test/assets/config-badorg-allexplicit',
+  );
+
+  // 🔴 the two REMAINING malformed-org shapes, each with a BARE uri. `getOneOrg`
+  //    raises three distinct malformed sentences and only the placeholder one
+  //    had reached this grade — `r2 blocker.1` (i003), conceded.
+  //
+  // ⚠️ the gap was an INCONSISTENCY, not merely a coverage hole, and it is the
+  //    same lesson one level deeper: i had already conceded that a refusal a
+  //    caller meets must be snapped where they meet it, swept the placeholder
+  //    form to all three grades at i002 — and left its two peers unit-only.
+  //    a principle applied to one of three peers is not a principle.
+  //
+  // ⛔ do not merge these two dirs. they part different guards: the map reaches
+  //    the `typeof` check, the blank string PASSES it and is caught only by the
+  //    empty-guard after the trim. one fixture cannot reach both.
+  const TEST_CONFIG_BADORG_NONLITERAL_DIR = join(
+    __dirname,
+    '../.test/assets/config-badorg-nonliteral',
+  );
+  const TEST_CONFIG_BADORG_BLANK_DIR = join(
+    __dirname,
+    '../.test/assets/config-badorg-blank',
+  );
+
+  // two choices, two DIFFERENT orgs. ⛔ do not reconcile them — the disagreement
+  // IS the fixture. every other config dir declares one org across its files,
+  // so this pair is the only place the per-choice read is observable. [case29].
+  const TEST_CONFIG_MULTIORG_DIR = join(
+    __dirname,
+    '../.test/assets/config-multiorg',
+  );
+
+  // notes the paths a supplier was ASKED for, so a test asserts the address
+  // rather than re-derives it. `verdict` decides what happens next.
+  const genNotedParamSupplier = (input: {
+    paths: string[];
+    verdict: 'supply' | 'absent';
+  }): SdkConfigSupplier => ({
+    scheme: 'aws::param',
+    supply: async ({ path }) => {
+      input.paths.push(path);
+      if (input.verdict === 'absent')
+        throw new SupplyAbsentError('parameter not found', { path });
+      return `param:${path}`;
+    },
+  });
+
+  given(
+    '[case26] org declared, param NOT yet moved to the derived path',
+    () => {
+      // the sharp critipath a repo hits the day it adopts: the org is declared,
+      // the derive points at the new address, and the param still sits at the old
+      // one. the error must carry the DERIVED path, so oncall reads one line and
+      // knows exactly what to create.
+      const paths: string[] = [];
+
+      when('[t0] getConfig() is called and the param is absent', () => {
+        const getConfig = genGetConfig({
+          schema: testSchema,
+          statics: `${TEST_CONFIG_DIR}/*.yml`,
+          cache: createCache(),
+          suppliers: [
+            genNotedParamSupplier({ paths, verdict: 'absent' }),
+            fakeSecretSupplier,
+          ],
+          environment: testEnv,
+        });
+
+        const scene = useBeforeAll(async () => ({
+          error: await getError(async () => getConfig()),
+        }));
+
+        then('it throws, because the value is required', () => {
+          expect(scene.error).toBeInstanceOf(BadRequestError);
+          expect(scene.error.message).toContain(
+            'config requires values that could not be read',
+          );
+        });
+
+        then('and the error carries the ORG-SCOPED path it looked at', () => {
+          // 🔴 the load-bearer. an error that named the OLD two-segment path would
+          //    send oncall to create a param the code will never read again.
+          expect(scene.error.message).toContain(
+            '/test-org/test-svc/test/database.password',
+          );
+        });
+
+        then('the supplier was asked for the four-segment address', () => {
+          expect(paths).toContain('/test-org/test-svc/test/database.password');
+        });
+      });
+    },
+  );
+
+  given('[case27] two orgs, one repo name — the collision is barred', () => {
+    // the motive of the whole behavior, at the factory grain: two repos that
+    // share a name and an aws account must not share a param path.
+    const pathsOrgA: string[] = [];
+    const pathsOrgB: string[] = [];
+
+    when('[t0] each declares its own org, in its own config', () => {
+      // 🔴 two CONFIGS, over two call sites — because both segments are
+      //    declared, never passed. the two fixture dirs name the SAME
+      //    `repository` (`test-svc`) and DIFFERENT orgs, so the repo segment
+      //    collides by construction and only the declared org can part them.
+      //    that is the whole motive of the behavior, at the factory grain.
+      const scene = useBeforeAll(async () => {
+        const getOrgA = genGetConfig({
+          schema: testSchema,
+          statics: `${TEST_CONFIG_DIR}/*.yml`, // declares `test-org`
+          cache: createCache(),
+          suppliers: [
+            genNotedParamSupplier({ paths: pathsOrgA, verdict: 'supply' }),
+            fakeSecretSupplier,
+          ],
+          environment: testEnv,
+        });
+        const getOrgB = genGetConfig({
+          schema: testSchema,
+          statics: `${TEST_CONFIG_MULTIORG_DIR}/*.yml`, // declares `org-of-test`
+          cache: createCache(),
+          suppliers: [
+            genNotedParamSupplier({ paths: pathsOrgB, verdict: 'supply' }),
+            fakeSecretSupplier,
+          ],
+          environment: testEnv,
+        });
+        await getOrgA();
+        await getOrgB();
+        return { ran: true };
+      });
+
+      then('neither reads the other org path', () => {
+        expect(scene.ran).toEqual(true);
+        expect(pathsOrgA).toEqual([
+          '/test-org/test-svc/test/database.password',
+        ]);
+        expect(pathsOrgB).toEqual([
+          '/org-of-test/test-svc/test/database.password',
+        ]);
+      });
+
+      then('and the two address sets are disjoint', () => {
+        for (const path of pathsOrgA) expect(pathsOrgB).not.toContain(path);
+      });
+
+      // 🔴 the BARRED COLLISION, SNAPPED — `r010` (i008), a loose end the lane
+      //    named and declined to hold the stone on. taken anyway. the vision
+      //    calls this case "the one to read": it is the motive of the whole
+      //    behavior, and it was the one case in the exhaustiveness sweep that
+      //    fell outside the sweep's own table.
+      //
+      //    the two `then` blocks above each prove HALF of it — one pins the
+      //    literals, the other proves disjointness — and a reviewer must hold
+      //    both to see the point. the snapshot puts the two namespaces side by
+      //    side, so the barred collision is legible in a PR diff at a glance.
+      //
+      //    ⇒ no mask is owed: every byte is deterministic. the orgs come from
+      //      two fixture configs and the repo segment is a literal, so there is
+      //      no per-run value to carve out.
+      then('and the two NAMESPACES are pinned, side by side', () => {
+        expect({ orgA: pathsOrgA, orgB: pathsOrgB }).toMatchSnapshot();
+      });
+    });
+  });
+
+  given('[case28] a config with no organization refuses to boot', () => {
+    const paths: string[] = [];
+
+    when('[t0] the config declares none', () => {
+      const getConfig = genGetConfig({
+        schema: testSchema,
+        statics: `${TEST_CONFIG_NOORG_DIR}/*.yml`,
+        cache: createCache(),
+        suppliers: [
+          genNotedParamSupplier({ paths, verdict: 'supply' }),
+          fakeSecretSupplier,
+        ],
+        environment: testEnv,
+      });
+
+      const scene = useBeforeAll(async () => ({
+        error: await getError(async () => getConfig()),
+      }));
+
+      then('it throws, and names the field', () => {
+        expect(scene.error).toBeInstanceOf(BadRequestError);
+        expect(scene.error.message).toContain('organization');
+      });
+
+      then('and teaches the one remedy — edit the config', () => {
+        // 🔴 one source, one remedy. a message that also named a call-site fix
+        //    would advertise a surface that does not exist, and send a reader
+        //    to look for an `org` argument they cannot pass.
+        expect(scene.error.message).toContain('your-org');
+        expect(scene.error.message).not.toContain('genGetConfig');
+      });
+
+      then('the SENTENCE a config author reads is pinned, here', () => {
+        // 🔴 this snapshot is at the ORCHESTRATION surface on purpose, and it
+        //    is not a duplicate of `getOneOrg.test.ts`'s.
+        //
+        //    the unit snapshot pins what `getOneOrg` THROWS. this pins what a
+        //    config author MEETS — the same sentence, raised through
+        //    `genGetConfig` with its context, at the one factory boundary a
+        //    new consumer actually calls. the two can drift apart the moment
+        //    a wrapper re-words or re-wraps the throw, and only this one
+        //    reddens when it does.
+        //
+        // ⇒ the `toContain` pair above proves the two remedies are NAMED; a
+        //   snapshot is what proves the sentence is still READABLE. a peer
+        //   caught that this surface asserted the first and never the second.
+        //
+        // .note = no path normalization is owed here, unlike the `getOneRepo`
+        //         snapshots. this refusal fires BEFORE any file path enters
+        //         the message — it names a field and two remedies, and every
+        //         token in it is authored, so it is hermetic as written.
+        expect(scene.error.message).toMatchSnapshot();
+      });
+
+      then('NO supplier was ever asked for a path', () => {
+        // 🔴 the one assertion that fails on a quiet fallback. a build that
+        //    dropped back to the old two-segment derive would still throw a
+        //    schema error later — but the store would have been READ, at the
+        //    un-namespaced path this behavior exists to make unreachable.
+        expect(paths).toEqual([]);
+      });
+    });
+
+    when('[t1] the same config, read through .static()', () => {
+      const getConfig = genGetConfig({
+        schema: testSchema,
+        statics: `${TEST_CONFIG_NOORG_DIR}/*.yml`,
+        cache: createCache(),
+        suppliers: [fakeParamSupplier, fakeSecretSupplier],
+        environment: testEnv,
+      });
+
+      then('it throws too — BOTH surfaces are held to the org', async () => {
+        // 🔴 `.static()` is a boot, and F8 asked that an absent org never boot.
+        //    a check that reached only the fill path would let a repo that
+        //    consumes `.static()` alone run forever on an absent
+        //    `organization`, and fire the refusal the day someone first calls
+        //    `getConfig()` — months later, by another author. that is Q8's
+        //    landmine at the one boundary the derive never touches.
+        //
+        // ⚠️ it costs no i/o. `.static()` reads and parses the file on every
+        //    call regardless, and the org is read as part of that parse — so
+        //    no surface is slower and none gained a side effect.
+        const error = await getError(async () => getConfig.static());
+        expect(error).toBeInstanceOf(BadRequestError);
+        expect(error.message).toContain('organization');
+      });
+
+      then('the raw shape is still reachable when an org IS declared', () => {
+        // the complement: the refusal is about the ORG, never about the raw
+        // read. point at a config that declares one and `.static()` returns the
+        // file's own shape, unfilled and unvalidated against the schema.
+        const getConfigWithOrg = genGetConfig({
+          schema: testSchema,
+          statics: `${TEST_CONFIG_DIR}/*.yml`,
+          cache: createCache(),
+          suppliers: [fakeParamSupplier, fakeSecretSupplier],
+          environment: testEnv,
+        });
+
+        const raw = getConfigWithOrg.static();
+        expect(raw.organization).toEqual('test-org'); // the declared org
+        expect(raw.database).toBeDefined(); // and the raw read still works
+      });
+    });
+
+    when(
+      '[t2] no org, and EVERY uri is explicit — no path needs a derive',
+      () => {
+        const pathsAllExplicit: string[] = [];
+        const getConfig = genGetConfig({
+          schema: testSchema,
+          statics: `${TEST_CONFIG_NOORG_ALLEXPLICIT_DIR}/*.yml`,
+          cache: createCache(),
+          suppliers: [
+            genNotedParamSupplier({
+              paths: pathsAllExplicit,
+              verdict: 'supply',
+            }),
+            fakeSecretSupplier,
+          ],
+          environment: testEnv,
+        });
+
+        then(
+          'it STILL throws — the org is required, derive or no derive',
+          async () => {
+            // 🔴 the ONLY clamp that parts F8's ALWAYS read from a LAZY one. a lazy
+            //    build reads the org only when a bare `$.at()` needs it — no value
+            //    here does, so a lazy build boots this config and every OTHER test
+            //    in the repo stays green.
+            //
+            // .why ALWAYS, per the wisher: "lazy is a landmine". a lazy check lets
+            //      an all-explicit repo run for months with a bad field, then fires
+            //      the day someone adds one bare placeholder — an explosion parted
+            //      from its cause by both time and author.
+            const error = await getError(async () => getConfig());
+            expect(error).toBeInstanceOf(BadRequestError);
+            expect(error.message).toContain('organization');
+          },
+        );
+
+        then('and the explicit paths were never read either', async () => {
+          // the cost of ALWAYS, made visible: this repo consumes no org at all,
+          // and is still refused. that is deliberate (vision case=4 [t2]).
+          //
+          // ⛔ do NOT reset with `pathsAllExplicit.length = 0` before the call.
+          //    it mutates a `const` shared with the peer block
+          //    (`rule.require.immutable-vars`), and it is a quiet failhide: a
+          //    regression that leaked a read in the `[t0]` block would have its
+          //    evidence wiped before this assertion could see it. the same warn
+          //    is written at `blackbox/sdk-config.acceptance.test.ts` [case14].
+          //
+          // ⇒ no reset is owed. the org refusal throws BEFORE any supplier runs,
+          //   so the array is already empty, and this assertion covers BOTH
+          //   calls.
+          await getError(async () => getConfig());
+          expect(pathsAllExplicit).toEqual([]);
+        });
+      },
+    );
+
+    when('[t3] a caller reaches for an org at the call site', () => {
+      then('there is no `org` key to reach for — clamped at the TYPE', () => {
+        // 🔴 a TYPE-level clamp, and it is the only kind that can hold this
+        //    claim. the org has ONE source, so this factory must offer no
+        //    second — and a second source is not a runtime state any assertion
+        //    could observe. it is a key, and a key is a type.
+        //
+        // ⚠️ it goes red the moment the key returns: ts reports an UNUSED
+        //    `@ts-expect-error` and the `types` gate fails. so the directive
+        //    below carries the whole clamp — do not delete it to quiet a build.
+        //
+        // .why = an override multiplies the experience space rather than adds
+        //        to it: a precedence rule, an absent-org state, two error
+        //        wordings per throw, and an optional ARGUMENT for a REQUIRED
+        //        VALUE (`rule.forbid.combinatorial-explosion`,
+        //        `ehmpathy/rhachet-roles-ehmpathy#674`).
+        //
+        // .note = to pin a different org, edit the config. the opt-out is a
+        //         DIFFERENT literal there — `"organization": "_"` derives
+        //         `/_/…`, clamped at `getOneOrg` [case1] [t1].
+        const gen = () =>
+          genGetConfig({
+            schema: testSchema,
+            statics: `${TEST_CONFIG_DIR}/*.yml`,
+            cache: createCache(),
+            suppliers: [fakeParamSupplier, fakeSecretSupplier],
+            environment: testEnv,
+
+            // @ts-expect-error — there is no `org` key. the config declares it.
+            org: 'acme',
+          });
+        expect(typeof gen).toEqual('function');
+      });
+    });
+
+    when(
+      '[t4] a MALFORMED org, and every uri is explicit — vision case=4 [t2]',
+      () => {
+        const pathsBadOrg: string[] = [];
+        const getConfig = genGetConfig({
+          schema: testSchema,
+          statics: `${TEST_CONFIG_BADORG_ALLEXPLICIT_DIR}/*.yml`,
+          cache: createCache(),
+          suppliers: [
+            genNotedParamSupplier({ paths: pathsBadOrg, verdict: 'supply' }),
+            fakeSecretSupplier,
+          ],
+          environment: testEnv,
+        });
+
+        then(
+          'it throws — the org is VALIDATED, derive or no derive',
+          async () => {
+            // 🔴 the peer of [t2], and it parts a different build. [t2] catches a
+            //    LAZY CALL; this catches a lazy VALIDATION — a build that calls
+            //    getOneOrg always but defers its literal check to the moment a
+            //    derive needs the value passes [t2] (whose field is `undefined`,
+            //    so the required-field guard fires first) and fails only here.
+            //
+            // ⚠️ so the two assertions differ on purpose: [t2] reaches the
+            //    required-field throw, this reaches the literal-string one. a
+            //    build that collapsed them would send a reader with a PRESENT
+            //    field to go add the field they had already written.
+            const error = await getError(async () => getConfig());
+            expect(error).toBeInstanceOf(BadRequestError);
+            expect(error.message).toContain('placeholder');
+            expect(error.message).not.toContain('lacks a required');
+
+            // 🔴 the SENTENCE, pinned at this grade — `r2 blocker.1` (i002),
+            //    conceded. the `toContain` pair above proves the two refusals
+            //    are DISCRIMINATED; only a snapshot proves this one is still
+            //    readable, and a reviewer sees it in the PR diff without a run.
+            //
+            // ⚠️ the peer caught an INCONSISTENCY, not merely a gap: i had
+            //    already conceded this exact principle for the no-org twin and
+            //    snapped it at all three grades, then left its peer refusal —
+            //    the one a config author with a typo meets — asserted only.
+            //    a principle applied to one of two peers is not a principle.
+            //
+            // .note = no mask, and no path normalization. this refusal fires
+            //         before any file path enters the message; every token in
+            //         it is authored, so it is hermetic as written — the same
+            //         property recorded at [t0]'s snapshot.
+            expect(error.message).toMatchSnapshot();
+          },
+        );
+
+        then(
+          'and no supplier ran — the refusal precedes every read',
+          async () => {
+            // 🔴 this assertion names the HARM, and it was measured rather than
+            //    reasoned. dogfooded 2026-09-18: the placeholder guard in
+            //    `getOneOrg` was disabled, and this went red with
+            //
+            //      Received: ["/org", "/hand/written/db/password"]
+            //
+            //    ⇒ `/org` is the ORG'S OWN placeholder, sent to the param store
+            //      as though it were a config value to fill. so a build with no
+            //      guard does not merely derive a bad path — it issues a store
+            //      read for the org itself, at a path the author never wrote.
+            //
+            // ⚠️ [t2] stayed GREEN through that same break, which is the whole
+            //    reason this block exists beside it.
+            //
+            // ⛔ do NOT reset `pathsBadOrg` before this call, for the reason
+            //    written at [t2]: it mutates a shared `const` and wipes the
+            //    evidence a leak in the block above would have left.
+            await getError(async () => getConfig());
+            expect(pathsBadOrg).toEqual([]);
+          },
+        );
+      },
+    );
+
+    when('[t5] the org is declared as a MAP, not a literal', () => {
+      const pathsNonLiteral: string[] = [];
+      const getConfig = genGetConfig({
+        schema: testSchema,
+        statics: `${TEST_CONFIG_BADORG_NONLITERAL_DIR}/*.yml`,
+        cache: createCache(),
+        suppliers: [
+          genNotedParamSupplier({ paths: pathsNonLiteral, verdict: 'supply' }),
+          fakeSecretSupplier,
+        ],
+        environment: testEnv,
+      });
+
+      then('it throws, and names THIS malformation', async () => {
+        // ⚠️ the `not.toContain` pair is what makes this case discriminate. a
+        //    build that collapsed the three malformed throws into one generic
+        //    sentence would pass a bare `toBeInstanceOf` and send a reader with
+        //    a MAP to go delete a placeholder they never wrote.
+        //
+        // 🔴 the second assertion is on the PEER THROW'S HEADLINE — `cannot be
+        //    a placeholder` — never on the bare word. measured 2026-09-18: a
+        //    bare `not.toContain('placeholder')` went RED here, and the code was
+        //    right. this throw's own hint says *"a placeholder is not filled
+        //    here"*, on purpose: the reader who wrote a map is one keystroke
+        //    from a `$.at()` instead, and the hint heads that off.
+        //
+        // ⇒ so the word appears in BOTH messages and discriminates neither. the
+        //   headline is what a caller reads first, and what parts the two.
+        const error = await getError(async () => getConfig());
+        expect(error).toBeInstanceOf(BadRequestError);
+        expect(error.message).toContain('literal string');
+        expect(error.message).not.toContain('cannot be a placeholder');
+        expect(error.message).not.toContain('lacks a required');
+      });
+
+      then('the SENTENCE a config author reads is pinned, here', async () => {
+        // 🔴 this snapshot is the point of the case — `r2 blocker.1` (i003).
+        //    the unit grade already pins what `getOneOrg` THROWS; this pins
+        //    what a config author MEETS, through the one factory a consumer
+        //    calls. the two drift the moment a wrapper re-words or re-wraps
+        //    the throw, and only this one reddens when it does.
+        //
+        // .note = no mask and no path normalization, for the reason recorded
+        //         at `[t0]` and `[t4]`: this refusal fires before any file path
+        //         enters the message, so every token in it is authored.
+        const error = await getError(async () => getConfig());
+        expect(error.message).toMatchSnapshot();
+      });
+
+      then(
+        'and no supplier ran — the refusal precedes every read',
+        async () => {
+          // the derive in this fixture is BARE, so a build that deferred the
+          // literal check to fill-time would splice `[object Object]` and issue a
+          // real store read at `/[object Object]/test-svc/test/…`. this is the
+          // assertion that names that harm.
+          await getError(async () => getConfig());
+          expect(pathsNonLiteral).toEqual([]);
+        },
+      );
+    });
+
+    when('[t6] the org is a BLANK string — whitespace only', () => {
+      const pathsBlank: string[] = [];
+      const getConfig = genGetConfig({
+        schema: testSchema,
+        statics: `${TEST_CONFIG_BADORG_BLANK_DIR}/*.yml`,
+        cache: createCache(),
+        suppliers: [
+          genNotedParamSupplier({ paths: pathsBlank, verdict: 'supply' }),
+          fakeSecretSupplier,
+        ],
+        environment: testEnv,
+      });
+
+      then('it throws, and names THIS malformation', async () => {
+        // 🔴 the one malformed value a `typeof` check cannot catch — `'   '` IS
+        //    a literal string, so it passes the guard `[t5]` reaches and is
+        //    refused only by the empty-guard after the trim.
+        //
+        // ⚠️ so `not.toContain('literal string')` is the load-bearer here: it
+        //    is what goes red if someone deletes the `.trim()` and the value
+        //    falls through to a blank spliced segment, or if the two throws are
+        //    merged into one.
+        const error = await getError(async () => getConfig());
+        expect(error).toBeInstanceOf(BadRequestError);
+        expect(error.message).toContain('empty');
+        expect(error.message).not.toContain('literal string');
+        expect(error.message).not.toContain('lacks a required');
+      });
+
+      then('the SENTENCE a config author reads is pinned, here', async () => {
+        // the third of three, and the last one unsnapped at this grade. see
+        // `[t5]`'s note for why the unit snapshot does not stand in for it.
+        const error = await getError(async () => getConfig());
+        expect(error.message).toMatchSnapshot();
+      });
+
+      then(
+        'and no supplier ran — the refusal precedes every read',
+        async () => {
+          await getError(async () => getConfig());
+          expect(pathsBlank).toEqual([]);
+        },
+      );
+    });
+  });
+
+  given('[case29] two choices in one repo declare DIFFERENT orgs', () => {
+    // ⇒ catalog: `1.vision.experience.case=8.org-varies-per-choice.md`, cell
+    //   `f2` on axis F (org-agreement = `divergent`). the axis was added to the
+    //   catalog AFTER this test, by the `r5` peer review
+    //   (`rule.require.experience-catalog-evolution`, backward terminus).
+    //
+    // 🔴 the vision calls this "structural, not chosen": the org's source is the
+    //    static config, which loads PER FILL, so there is no repo-wide read to
+    //    hoist it to. and the vision's own awkward #6 predicts a later author
+    //    will read the asymmetry with `repo` — fixed once, at factory time —
+    //    as an inconsistency and want to "fix" it.
+    //
+    // ⚠️ that refactor is what this case exists to catch, and until it was
+    //    written not one test could: all three `config/*` fixtures declare the
+    //    same `test-org`, so a build that read one file, cached across choices,
+    //    or hoisted to a module singleton derived the right path anyway.
+    const prepEnv = new SdkConfigEnvironment({
+      config: 'prep',
+      server: 'local@unix',
+    });
+
+    when('[t0] the `test` choice is filled', () => {
+      const paths: string[] = [];
+      const getConfig = genGetConfig({
+        schema: testSchema,
+        statics: `${TEST_CONFIG_MULTIORG_DIR}/*.yml`,
+        cache: createCache(),
+        suppliers: [
+          genNotedParamSupplier({ paths, verdict: 'supply' }),
+          fakeSecretSupplier,
+        ],
+        environment: testEnv,
+      });
+
+      then('it derives with test.yml own org', async () => {
+        await getConfig();
+        expect(paths).toEqual(['/org-of-test/test-svc/test/database.password']);
+      });
+    });
+
+    when('[t1] the `prep` choice is filled, same repo, same statics', () => {
+      const paths: string[] = [];
+      const getConfig = genGetConfig({
+        schema: testSchema,
+        statics: `${TEST_CONFIG_MULTIORG_DIR}/*.yml`,
+        cache: createCache(),
+        suppliers: [
+          genNotedParamSupplier({ paths, verdict: 'supply' }),
+          fakeSecretSupplier,
+        ],
+        environment: prepEnv,
+      });
+
+      then('it derives with prep.yml OWN org, never test.yml', async () => {
+        // the two assertions are one claim: the org tracks the CHOICE, and a
+        // build that resolved it once would leak `org-of-test` into this path.
+        await getConfig();
+        expect(paths).toEqual(['/org-of-prep/test-svc/prep/database.password']);
+        expect(paths[0]).not.toContain('org-of-test');
+      });
+    });
+  });
+
+  given('[case31] the blocker a human reads names the ORG-SCOPED path', () => {
+    // 🔴 the vision's `case=5` — org declared, param not yet moved — and F6
+    //    promotes it to the transition state EVERY repo passes through on
+    //    adoption. its whole weight sits on one claim: *"the derived path
+    //    appears verbatim in the error's cause, so oncall reads one line and
+    //    knows the move."*
+    //
+    // ⚠️ that claim was clamped NOWHERE. every other blocker assertion in this
+    //    file masks the cause — `toMatchSnapshot({ blockers: [{ cause:
+    //    expect.any(SupplyError) }] })` — which is correct, since the message
+    //    bakes a volatile stack, and which ALSO erases the one field this case
+    //    rests on. and `asFilledConfig [case9]` proves only that the path
+    //    reaches `omissions`, one layer BELOW the blocker.
+    //
+    // 🟡 PROBED, and the result corrected the reason above rather than
+    //    confirmed it. two probes, neither unique: a `cause` dropped in
+    //    `getAllBlockedSupplies` reddens **9**, since the masked snapshots
+    //    still assert `expect.any(SupplyError)`; a derive reverted to two
+    //    segments reddens **13**. ⇒ the claim IS covered — by the CONJUNCTION
+    //    of three clamps in three files (the path reaches `omissions`, the
+    //    cause survives into the blocker, the derive carries the org).
+    //
+    // ⇒ this case stays anyway, and for a stated reason: a claim proven only
+    //   by a conjunction across three files is not a demonstration a reviewer
+    //   can find. the vision's `case=5` owes ONE test that exercises it
+    //   end-to-end, at the grain a human reads
+    //   (`rule.require.experience-catalog-evolution`, the verification
+    //   terminus). this is that test, and it is a terminus over a clamp.
+    const absentParamSupplier: SdkConfigSupplier = {
+      scheme: 'aws::param',
+      supply: async ({ path }) => {
+        throw new SupplyAbsentError('parameter not found', { path });
+      },
+    };
+
+    when('[t0] a required field behind a BARE uri cannot be read', () => {
+      const getConfig = genGetConfig({
+        schema: testSchema,
+        statics: `${TEST_CONFIG_DIR}/*.yml`,
+        cache: createCache(),
+        suppliers: [absentParamSupplier, fakeSecretSupplier],
+        environment: testEnv,
+      });
+
+      const scene = useBeforeAll(async () => ({
+        error: await getError(async () => getConfig()),
+      }));
+
+      then('the error carries the derived address, verbatim', () => {
+        expect(scene.error).toBeInstanceOf(BadRequestError);
+        // the whole address, in one string — this is the line oncall reads
+        expect(String(scene.error)).toContain(
+          '/test-org/test-svc/test/database.password',
+        );
+      });
+
+      then('and the blocker cause holds it EXACTLY, org and all', () => {
+        // 🔴 the F8 clamp at this grade. a build that fell back to the old
+        //    two-segment derive would ALSO produce a legible error — just a
+        //    legible WRONG one, pointed at the shared namespace this behavior
+        //    exists to make unreachable.
+        //
+        // ⛔ do NOT restate this as `not.toContain('/svc-notifications/test/…')`.
+        //    it CANNOT pass: the un-namespaced path sits inside the org-scoped
+        //    one as a plain text run, so the assertion fails whenever the code
+        //    is CORRECT. that is the F4 trap — the same shape `org` inside
+        //    `organization` sets — and it reaches any `not.toContain` where one
+        //    valid value nests inside another.
+        //
+        // ⇒ the exact read below sidesteps the containment question AND claims
+        //   strictly more: the address is that path, and no other.
+        const error = scene.error;
+        if (!(error instanceof BadRequestError)) throw error;
+        // .note = an `as` cast at a third-party boundary, which is the one
+        //         exemption `rule.forbid.as-cast` grants — `helpful-errors`
+        //         hands a caught error's `metadata` back untyped, and no
+        //         `instanceof` recovers the generic the throw site declared.
+        //
+        // 🔴 the cast names the OWNED type, never a hand-rolled shape, so a
+        //    later edit to `SupplyOmission.cause` or to `SupplyError`'s
+        //    metadata generic breaks THIS LINE at compile time.
+        //
+        // ⛔ do NOT spell the shape inline as
+        //    `{ cause: { metadata: { path: string } } }[]`. it asserts the
+        //    same claim today, re-declares a contract this repo already owns
+        //    (`rule.require.shapefit`), and — measured — compiles straight
+        //    through a DELETED contract, then asserts against it. a cast
+        //    chooses which type the compiler checks you against; an inline
+        //    shape opts out of that check and still looks like a cast.
+        const { blockers } = error.metadata as {
+          blockers: SupplyTolerance<'block'>[];
+        };
+        expect(blockers.map((blocker) => blocker.cause.metadata.path)).toEqual([
+          '/test-org/test-svc/test/database.password',
+        ]);
+      });
+
+      then('the blocker still names the config key and the reason', () => {
+        // the address is an ADDITION to what oncall already had, never a
+        // replacement — both halves are needed to act
+        expect(String(scene.error)).toContain('database.password');
+        expect(String(scene.error)).toContain('absent');
+      });
+    });
+  });
+
+  given('[case30] the `organization` field belongs to the CONSUMER', () => {
+    // ⇒ catalog: `1.vision.experience.case=9.the-consumers-own-field.md`, cells
+    //   `g1`/`g2` on axis G (schema-declares). the axis was added to the catalog
+    //   AFTER this test, by the `r5` peer review
+    //   (`rule.require.experience-catalog-evolution`, backward terminus).
+    //
+    // 🔴 sdk-config READS this field; it does not own or consume it. the 6
+    //    ahbode consumers wrote `organization` for their own schemas years
+    //    before this change, so what we take from it must also stay theirs.
+    //
+    // ⚠️ this is the one behavior no other test in the repo could catch: every
+    //    other schema here OMITS `organization`, and a plain `z.object` strips
+    //    unknown keys — so a build that deleted the field before `safeParse`
+    //    would keep all 111 other tests green and break every consumer that
+    //    reads its own org. the two `when`s clamp both directions.
+    when('[t0] the consumer schema DECLARES it', () => {
+      const schemaWithOrg = z.object({
+        organization: z.string(),
+        database: z.object({
+          host: z.string(),
+          port: z.number(),
+          password: z.string(),
+        }),
+        api: z.object({ key: z.string(), url: z.string() }),
+      });
+
+      const getConfig = genGetConfig({
+        schema: schemaWithOrg,
+        statics: `${TEST_CONFIG_DIR}/*.yml`,
+        cache: createCache(),
+        suppliers: [fakeParamSupplier, fakeSecretSupplier],
+        environment: testEnv,
+      });
+
+      const result = useBeforeAll(async () => getConfig());
+
+      then('the field survives into the parsed config', () => {
+        expect(result.organization).toEqual('test-org');
+      });
+    });
+
+    when('[t1] the consumer schema OMITS it', () => {
+      // .note = the mirror clamp, and it guards the cost F8 imposes: we now
+      //         REQUIRE a key the consumer may never have declared in their
+      //         own schema. a plain `z.object` strips it, so the requirement
+      //         costs such a consumer no schema edit.
+      const getConfig = genGetConfig({
+        schema: testSchema,
+        statics: `${TEST_CONFIG_DIR}/*.yml`,
+        cache: createCache(),
+        suppliers: [fakeParamSupplier, fakeSecretSupplier],
+        environment: testEnv,
+      });
+
+      const result = useBeforeAll(async () => getConfig());
+
+      then('the config still parses, with the key stripped', () => {
+        expect(result.database.host).toEqual('localhost');
+        expect(result).not.toHaveProperty('organization');
+      });
+    });
+  });
+
+  given('[case32] the repo has TWO declared sources, and no argument', () => {
+    // 🔴 .note = `genGetConfig` takes NO `repo` key. both path segments are
+    //         declared in the config, and the repo alone carries an ergonomic
+    //         default because its name is already on disk.
+    //
+    //         | route | source |
+    //         |---|---|
+    //         | explicit | the config's `repository` field |
+    //         | default | `package.json` `name`, scope stripped |
+    //
+    // ⛔ do NOT re-add a `repo` argument. a third source is what let
+    //    `repo: 'ehmpathy/svc-x'` pre-supply an org the derive now supplies —
+    //    five segments, no error (`rule.forbid.combinatorial-explosion`).
+    const genFactoryFromDir = (input: { dir: string }) => {
+      const paths: string[] = [];
+      const getConfig = genGetConfig({
+        schema: testSchema,
+        statics: `${input.dir}/*.yml`,
+        cache: createCache(),
+        suppliers: [
+          genNotedParamSupplier({ paths, verdict: 'supply' }),
+          fakeSecretSupplier,
+        ],
+        environment: testEnv,
+      });
+      return { getConfig, paths };
+    };
+
+    when('[t0] the config declares `repository`', () => {
+      const scene = useBeforeAll(async () => {
+        const { getConfig, paths } = genFactoryFromDir({
+          dir: TEST_CONFIG_DIR,
+        });
+        await getConfig();
+        return { paths };
+      });
+
+      then('the declared value is the segment', () => {
+        expect(scene.paths).toEqual([
+          '/test-org/test-svc/test/database.password',
+        ]);
+      });
+    });
+
+    when('[t1] the config declares NO `repository`', () => {
+      const scene = useBeforeAll(async () => {
+        const { getConfig, paths } = genFactoryFromDir({
+          dir: TEST_CONFIG_NOREPO_DIR,
+        });
+        await getConfig();
+        return { paths };
+      });
+
+      then('package.json `name` is the ergonomic default', () => {
+        // this repo's own package.json declares `name: "sdk-config"`
+        expect(scene.paths).toEqual([
+          '/test-org/sdk-config/test/database.password',
+        ]);
+      });
+    });
+
+    when('[t2] the declared `repository` carries an npm SCOPE', () => {
+      const scene = useBeforeAll(async () => {
+        const { getConfig, paths } = genFactoryFromDir({
+          dir: TEST_CONFIG_SCOPEDREPO_DIR,
+        });
+        await getConfig();
+        return { paths };
+      });
+
+      then('the scope is stripped, over spliced as a segment', () => {
+        // 🔴 the clamp on the scope strip. spliced verbatim,
+        //    `@ehmpathy/svc-x` derives `/test-org/@ehmpathy/svc-x/test/…` —
+        //    five segments, and a path no param lives at. a scope names an
+        //    ORG, and the org is already its own segment.
+        expect(scene.paths).toEqual(['/test-org/svc-x/test/database.password']);
+      });
+    });
+
+    when('[t3] the declared `repository` is whitespace only', () => {
+      const scene = useBeforeAll(async () => ({
+        error: await getError(async () => {
+          const { getConfig } = genFactoryFromDir({
+            dir: TEST_CONFIG_BADREPO_BLANK_DIR,
+          });
+          return getConfig();
+        }),
+      }));
+
+      then('it throws, over a blank spliced segment', () => {
+        // ⚠️ `'   '` is the one malformed value a `typeof` check cannot catch.
+        //    drop the `.trim()` in `asRepoSegment` and this splices `/   /` —
+        //    a name aws refuses, three files from the line that caused it.
+        expect(scene.error).toBeInstanceOf(BadRequestError);
+        expect(scene.error.message).toContain('repo is empty');
+      });
+
+      then('the refusal is snapped at the surface a caller meets', () => {
+        expect(
+          asPortableMessage({ message: scene.error.message }),
+        ).toMatchSnapshot();
       });
     });
   });

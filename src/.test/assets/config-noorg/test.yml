@@ -1,0 +1,14 @@
+# .what = a config fixture that deliberately declares NO `organization`
+# .why  = the refusal case needs a config that lacks the field. every other
+#         fixture declares it, so without this one there is no way to reach the
+#         state a required field forbids.
+#
+# ⛔ do NOT add an `organization` key here. this file's whole job is its absence;
+#    a well-meant fix would leave the refusal untested while the suite stays green.
+database:
+  host: localhost
+  port: 5432
+  password: '$.at(aws::param)'
+api:
+  key: '$.at(aws::secret/shared/api/key)'
+  url: https://api.test.example.com

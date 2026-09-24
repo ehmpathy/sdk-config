@@ -1,33 +1,45 @@
 import { BadRequestError } from 'helpful-errors';
 import type { EnvironmentConfigSlug } from 'sdk-environment';
 
+import type { OrgSlug } from '../domain.objects/OrgSlug';
+import type { RepoSlug } from '../domain.objects/RepoSlug';
 import type { SdkConfigUri } from '../domain.objects/SdkConfigUri';
 
 /**
  * .what = derive full path from uri + context
  * .why = auto-derive paths for convenience, pass through explicit paths
  *
+ * .note = the org is non-nullable on arrival — `getOneOrg` throws over returns
+ *         absent — so there is ONE template here and no branch. an
+ *         un-namespaced derive is unreachable, over discouraged.
+ *
+ * .note = the derive never reads `uri.scheme`. an org namespace is a property
+ *         of the repo, never of the store it reads from.
+ *
  * @example auto-derive
  * asSdkConfigPath({
  *   uri: { scheme: 'aws::param', explicitPath: null },
- *   repoName: 'svc-x',
+ *   org: 'ahbode',
+ *   repo: 'svc-x',
  *   choice: 'prod',
  *   keyPath: 'database.password',
  * })
- * // → '/svc-x/prod/database.password'
+ * // → '/ahbode/svc-x/prod/database.password'
  *
  * @example explicit path
  * asSdkConfigPath({
  *   uri: { scheme: 'aws::param', explicitPath: '/shared/db/pass' },
- *   repoName: 'svc-x',
+ *   org: 'ahbode',
+ *   repo: 'svc-x',
  *   choice: 'prod',
  *   keyPath: 'database.password',
  * })
- * // → '/shared/db/pass'
+ * // → '/shared/db/pass'   ← the org is never spliced into an explicit path
  */
 export const asSdkConfigPath = (input: {
   uri: SdkConfigUri;
-  repoName: string;
+  org: OrgSlug;
+  repo: RepoSlug;
   choice: EnvironmentConfigSlug;
   keyPath: string;
 }): string => {
@@ -38,11 +50,12 @@ export const asSdkConfigPath = (input: {
   if (!input.keyPath.length)
     throw new BadRequestError('empty keyPath', {
       uri: input.uri,
-      repoName: input.repoName,
+      org: input.org,
+      repo: input.repo,
       choice: input.choice,
       hint: 'keyPath is required for auto-derived paths',
     });
 
-  // auto-derive: /{repoName}/{choice}/{keyPath}
-  return `/${input.repoName}/${input.choice}/${input.keyPath}`;
+  // auto-derive: /{org}/{repo}/{choice}/{keyPath}
+  return `/${input.org}/${input.repo}/${input.choice}/${input.keyPath}`;
 };

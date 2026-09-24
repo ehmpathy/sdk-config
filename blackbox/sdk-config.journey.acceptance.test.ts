@@ -20,9 +20,14 @@ import {
   genSdkConfigSupplierAwsParameterStore,
   genSdkConfigSupplierAwsSecretsManager,
   SdkConfigEnvironment,
-} from '@src/index';
+} from '@src/contract/sdk';
 
-const TEST_CONFIG_DIR = join(__dirname, '../src/__test_assets__/config');
+// ⛔ the journey suite has its OWN fixture dir, and it must keep one. it shares
+//    `test-org` with the acceptance suite and differs on `repository`, so the
+//    two write REAL aws params at DIFFERENT paths. jest runs test files in
+//    parallel workers and each suite deletes its param in `afterAll`, so one
+//    shared path means one suite reaps the other's mid-run.
+const TEST_CONFIG_DIR = join(__dirname, '../src/.test/assets/config-journey');
 
 /**
  * developer config journey:
@@ -56,9 +61,16 @@ describe('sdk-config.journey', () => {
   const testParamValue = `test-param-${testUuid}`;
   let testSecretValue = `test-secret-${testUuid}`;
 
-  // paths for my-app repo
+  // .note = the derived param carries FOUR segments — /{org}/{repo}/{choice}/{keyPath}.
+  //         BOTH slugs come from the fixture config — `test-org` from its
+  //         `organization`, `journey-app` from its `repository` — and neither is
+  //         passed in. so this literal is an independent restatement of what the
+  //         derive must produce, over an input it could drift along with.
+  //
+  //         the secret stays three: it is an EXPLICIT path, which the derive
+  //         never touches.
   const testPaths = {
-    param: '/my-app/test/database.password',
+    param: '/test-org/journey-app/test/database.password',
     secret: '/shared/api/key',
   };
 
@@ -143,9 +155,7 @@ describe('sdk-config.journey', () => {
         statics: `${TEST_CONFIG_DIR}/*.yml`,
         cache,
         suppliers: [paramSupplier, secretSupplier],
-        environment: testEnv,
-        repoName: 'my-app',
-      });
+        environment: testEnv,      });
 
       then('returns a function with .static() and .filled() methods', () => {
         expect(typeof getConfig).toBe('function');
@@ -171,6 +181,26 @@ describe('sdk-config.journey', () => {
         then('typed config with filled secrets is returned', () => {
           expect(result.database.password).toBe(testParamValue);
           expect(result.api.key).toBe(testSecretValue);
+        });
+
+        // 🔴 the POSITIVE journey, SNAPPED — `r4 blocker.1` (i002), conceded.
+        //    the two assertions above prove the values are CORRECT; only a
+        //    snapshot proves the FILLED SHAPE a caller receives is still what they
+        //    expect, and a reviewer sees it in the PR diff without a run.
+        //
+        //    both filled values carry a per-run uuid, so both are MASKED and
+        //    the rest is snapped live — never carved out
+        //    (`rule.require.contract-snapshot-exhaustiveness`).
+        //
+        //    ⇒ `organization` is absent from the snap on purpose: the raw
+        //      config declares it (see [t1]'s entry) and `appSchema` does not,
+        //      so zod strips it at the parse. that is the [case9] experience,
+        //      pinned here at the journey surface.
+        then('and the FILLED SHAPE a caller receives is pinned, masked', () => {
+          expect(result).toMatchSnapshot({
+            api: { key: expect.any(String) },
+            database: { password: expect.any(String) },
+          });
         });
       });
 
@@ -200,9 +230,7 @@ describe('sdk-config.journey', () => {
         statics: `${TEST_CONFIG_DIR}/*.yml`,
         cache: createCache(),
         suppliers: [paramSupplier, secretSupplier],
-        environment: testEnv,
-        repoName: 'my-app',
-      });
+        environment: testEnv,      });
 
       then('helpful error is thrown with schema context', async () => {
         const error = await getError(async () => getConfig());
@@ -218,9 +246,7 @@ describe('sdk-config.journey', () => {
         statics: `${TEST_CONFIG_DIR}/*.yml`,
         cache: createCache(),
         suppliers: [], // no suppliers
-        environment: testEnv,
-        repoName: 'my-app',
-      });
+        environment: testEnv,      });
 
       then('helpful error is thrown with scheme context', async () => {
         const error = await getError(async () => getConfig());
