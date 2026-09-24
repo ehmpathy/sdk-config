@@ -5,7 +5,7 @@ import { given, then, when } from 'test-fns';
 import { join } from 'node:path';
 import { asStaticConfig } from './asStaticConfig';
 
-const TEST_CONFIG_DIR = join(__dirname, '../__test_assets__/config');
+const TEST_CONFIG_DIR = join(__dirname, '../.test/assets/config');
 
 describe('asStaticConfig', () => {
   given('[case1] yaml config file', () => {
@@ -15,7 +15,7 @@ describe('asStaticConfig', () => {
           statics: `${TEST_CONFIG_DIR}/*.yml`,
           choice: 'test',
         });
-        expect(result).toMatchObject({
+        expect(result.config).toMatchObject({
           database: {
             host: 'localhost',
             port: 5432,
@@ -26,6 +26,10 @@ describe('asStaticConfig', () => {
             url: 'https://api.test.example.com',
           },
         });
+        // .note = the org rides along with the parse, because a parsed config
+        //         and its org are ONE value — there is no route to the first
+        //         that skips the second.
+        expect(result.org).toEqual('test-org');
       });
     });
   });
@@ -37,7 +41,7 @@ describe('asStaticConfig', () => {
           statics: `${TEST_CONFIG_DIR}/*.json5`,
           choice: 'prod',
         });
-        expect(result).toMatchObject({
+        expect(result.config).toMatchObject({
           database: {
             host: 'db.prod.example.com',
             port: 5432,
@@ -59,7 +63,7 @@ describe('asStaticConfig', () => {
           statics: `${TEST_CONFIG_DIR}/*`,
           choice: 'test',
         });
-        expect(result.database).toMatchObject({ host: 'localhost' });
+        expect(result.config.database).toMatchObject({ host: 'localhost' });
       });
     });
   });
@@ -75,7 +79,15 @@ describe('asStaticConfig', () => {
         );
         expect(error).toBeInstanceOf(BadRequestError);
         expect(error.message).toContain('no config files found');
-        expect(error.message).toMatchSnapshot();
+        // .note = the message echoes the caller's `statics` glob (an absolute
+        //         __dirname-derived path). we redact the repo-root prefix
+        //         (process.cwd()) to `<cwd>` so the snapshot keeps its coverage
+        //         yet stays portable — a machine-dependent snapshot can only
+        //         ever pass on the host that last wrote it.
+        //         (rule.require.hermetic-tests)
+        expect(
+          error.message.split(process.cwd()).join('<cwd>'),
+        ).toMatchSnapshot();
       });
     });
   });

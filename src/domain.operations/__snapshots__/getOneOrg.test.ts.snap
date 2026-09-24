@@ -1,0 +1,42 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`getOneOrg given: [case2] the config declares NO organization when: [t0] the field is absent then: it throws — the field is required 1`] = `
+"BadRequestError: config lacks a required \`organization\` field
+
+{
+  "hint": "every sdk-config consumer must declare a top-level \`organization\` — it becomes the first segment of every auto-derived path, so two orgs' repos of the same name cannot collide in one param store. it is required even where every uri is explicit: the field is read on every load, so the day someone adds one bare \`$.at()\` it cannot silently derive an un-namespaced path. add \`\\"organization\\": \\"your-org\\"\` to the config. to opt a repo out of a shared namespace, declare a placeholder such as \`\\"organization\\": \\"_\\"\` — there is no way to derive without one"
+}"
+`;
+
+exports[`getOneOrg given: [case3] the declared organization is not a literal string when: [t0] it is an object then: it throws 1`] = `
+"BadRequestError: org must be a literal string
+
+{
+  "source": "the \`organization\` field declared in the config",
+  "declared": {
+    "name": "ahbode"
+  },
+  "declaredType": "object",
+  "hint": "the \`organization\` field declared in the config must hold a literal string, such as \\"ahbode\\". a placeholder is not filled here — the org is read before any supplier runs, so it cannot itself be supplied"
+}"
+`;
+
+exports[`getOneOrg given: [case3] the declared organization is not a literal string when: [t2] it is a placeholder uri then: it throws, over an attempt to fill it 1`] = `
+"BadRequestError: org cannot be a placeholder
+
+{
+  "source": "the \`organization\` field declared in the config",
+  "declared": "$.at(aws::param/org)",
+  "hint": "the \`organization\` field declared in the config must hold a literal value, never a $.at() placeholder. the org is read before any supplier runs — it is what decides the path a supplier reads — so it cannot itself be supplied. declare the literal"
+}"
+`;
+
+exports[`getOneOrg given: [case3] the declared organization is not a literal string when: [t3] it is an empty string then: it throws — a blank would splice a blank segment 1`] = `
+"BadRequestError: org is empty
+
+{
+  "source": "the \`organization\` field declared in the config",
+  "declared": "",
+  "hint": "the \`organization\` field declared in the config must hold a non-empty value. to opt a repo out of a shared namespace, declare a placeholder such as \\"_\\" — an empty org would splice a blank segment and derive an unreachable path"
+}"
+`;

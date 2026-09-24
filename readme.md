@@ -19,10 +19,11 @@ for example
 
 config/prod.yml
 ```yaml
+organization: your-org # required
 database:
   host: localhost
   username: admin
-  password: $.at(aws::ssm)
+  password: $.at(aws::param)
 ```
 
 javascript
@@ -60,31 +61,57 @@ console.log(config.database.password); // actual secret value from paramstore
 
 ## suppliers
 
-pluggable credential suppliers handle `$.at(uri)` patterns. ships with `genSdkConfigSupplierAwsParameterStore`.
+pluggable credential suppliers handle `$.at(uri)` patterns. ships with `genSdkConfigSupplierAwsParameterStore` and `genSdkConfigSupplierAwsSecretsManager`.
 
 uri replacement patterns:
 
 | pattern | behavior |
 |---------|----------|
-| `$.at(aws::ssm)` | auto-resolves path from repo name + config key path |
-| `$.at(aws::ssm/exact/path)` | explicit ssm parameter path |
-| `$.at(aws::secrets)` | auto-resolves from aws secrets manager |
-| `$.at(aws::secrets/exact/path)` | explicit secrets manager path |
+| `$.at(aws::param)` | auto-resolves path from org + repo + access + config key path |
+| `$.at(aws::param/exact/path)` | explicit ssm parameter path |
+| `$.at(aws::secret)` | auto-resolves from aws secrets manager |
+| `$.at(aws::secret/exact/path)` | explicit secrets manager path |
 | `$.at(aws::s3/bucket/key)` | fetch from s3 object |
+
+a scheme must match a registered supplier's `.scheme` exactly. any other scheme throws
+`unknown scheme` on the first `getConfig()`.
 
 **auto-resolution example:**
 
-for a repo named `svc-raisefloor` with `environment.access = 'prod'` and config key `database.password`:
-- `$.at(aws::ssm)` resolves to ssm path `/svc-raisefloor/prod/database.password`
-- `$.at(aws::secrets)` resolves to secret `/svc-raisefloor/prod/database.password`
+for org `ehmpathy`, a repo named `svc-raisefloor`, with `environment.access = 'prod'` and config key `database.password`:
+- `$.at(aws::param)` resolves to ssm path `/ehmpathy/svc-raisefloor/prod/database.password`
+- `$.at(aws::secret)` resolves to secret `/ehmpathy/svc-raisefloor/prod/database.password`
+
+the org leads, so two orgs' repos of the same name never collide in one store.
 
 **explicit path example:**
 
 ```yaml
 database:
-  password: $.at(aws::ssm/shared/db/prod-password)
-apiKey: $.at(aws::secrets/third-party/stripe-key)
+  password: $.at(aws::param/shared/db/prod-password)
+apiKey: $.at(aws::secret/third-party/stripe-key)
 ```
+
+### org and repo
+
+auto-resolution needs an org and a repo. both are declared in the config; neither is a
+`genGetConfig` argument.
+
+| field | required | default |
+|---|---|---|
+| `organization` | yes | none — declare it |
+| `repository` | no | `package.json` `name`, npm scope stripped |
+
+```yaml
+organization: ehmpathy
+repository: svc-raisefloor # optional — package.json `name` by default
+```
+
+they are read on **every** load, whether or not any `$.at()` needs a resolve. so a bad value
+throws on your first `getConfig()`, over the day someone adds a bare placeholder.
+
+want out of a real org? `organization: '_'` resolves to `/_/svc-x/prod/…`. it is a shared pool
+though — two opted-out `svc-x` still meet there. declare a real org for a namespace of your own.
 
 ## validation
 
@@ -154,8 +181,8 @@ const cicd = z.object({
 
 the plan job (`GRANT=plan`) reads `plan.*` normally and is denied on the escalated
 `apply.*`; because those leaves are `.optional()`, the denied reads are tolerated and
-`getConfig()` resolves. the apply job (`GRANT=apply`) holds the superset grant, reads
-`plan.*` and `apply.*`, and resolves with none tolerated. note the asymmetry: `plan.*` is
+`getConfig()` returns. the apply job (`GRANT=apply`) holds the superset grant, reads
+`plan.*` and `apply.*`, and returns with none tolerated. note the asymmetry: `plan.*` is
 never optional — a denial on the baseline is a real failure and hard-throws either way.
 
 > mark the **leaf** optional, not an ancestor object. a present optional object must still
@@ -163,6 +190,46 @@ never optional — a denial on the baseline is a real failure and hard-throws ei
 > leaf fails loud — mark the specific leaf you expect to be unreadable.
 
 ### custom suppliers
+
+a supplier is a `scheme` plus a `supply(input: { path })`. register it and its scheme is live:
+
+```ts
+// an s3 supplier, for `$.at(aws::s3/bucket/key)`
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { SupplyAbsentError, SupplyDeniedError } from 'sdk-config';
+import type { SdkConfigSupplier } from 'sdk-config';
+
+export const genSdkConfigSupplierAwsS3 = (): SdkConfigSupplier => {
+  const client = new S3Client({});
+  return {
+    scheme: 'aws::s3',
+    supply: async ({ path }) => {
+      // $.at(aws::s3/my-bucket/secrets/db.txt) → path = '/my-bucket/secrets/db.txt'
+      const [bucket, ...rest] = path.replace(/^\//, '').split('/');
+      try {
+        const got = await client.send(
+          new GetObjectCommand({ Bucket: bucket, Key: rest.join('/') }),
+        );
+        return (await got.Body!.transformToString()).trim();
+      } catch (error) {
+        if ((error as { name?: string }).name === 'NoSuchKey')
+          throw new SupplyAbsentError('s3 object not found', { path });
+        if ((error as { name?: string }).name === 'AccessDenied')
+          throw new SupplyDeniedError('s3 access denied', { path });
+        throw error; // transient errors always propagate
+      }
+    },
+  };
+};
+
+export const getConfig = genGetConfig({
+  schema, statics, cache, environment,
+  suppliers: [genSdkConfigSupplierAwsParameterStore(), genSdkConfigSupplierAwsS3()],
+});
+```
+
+`aws::s3` takes an explicit path only. auto-resolution derives `/{org}/{repo}/{access}/{key}`,
+which has no bucket in it — a scheme whose address needs a bucket must be handed one.
 
 a non-aws supplier opts into tolerance when it throws the exported `SupplyAbsentError` /
 `SupplyDeniedError` (both extend `SupplyError`). fill tolerates these exactly as it does

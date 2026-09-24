@@ -1,0 +1,82 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`getOneRepo given: [case3] no \`repository\`, and no package.json when: [t0] called in directory without package.json then: throws BadRequestError 1`] = `
+"BadRequestError: package.json not found
+
+{
+  "path": "<cwd>/src/.test/assets/no-such-dir/package.json",
+  "hint": "declare a top-level \`repository\` in the config, or ensure package.json exists"
+}"
+`;
+
+exports[`getOneRepo given: [case5] package.json with invalid json when: [t0] called in directory with malformed package.json then: throws BadRequestError with parse context 1`] = `
+"BadRequestError: package.json parse failed
+
+{
+  "path": "<cwd>/src/.test/assets/invalid-package/package.json",
+  "error": "Expected property name or '}' in JSON at position 2 (line 1 column 3)",
+  "hint": "check package.json syntax"
+}"
+`;
+
+exports[`getOneRepo given: [case6] a \`repository\` with wrapper slashes — the org/repo symmetry when: [t0] the value is typed with a slash on each end then: a value that is ONLY slashes throws, over a blank splice 1`] = `
+"BadRequestError: repo is empty
+
+{
+  "source": "the \`repository\` field declared in the config",
+  "declared": "/",
+  "hint": "the \`repository\` field declared in the config must hold a non-empty value — an empty repo would splice a blank segment and derive an unreachable path"
+}"
+`;
+
+exports[`getOneRepo given: [case7] package.json cannot be READ, and it is not absent when: [t0] the path resolves to a directory, so readFileSync throws EISDIR then: the error names a READ failure, never a syntax one 1`] = `
+"BadRequestError: package.json could not be read
+
+{
+  "path": "<cwd>/src/.test/assets/unreadable-package/package.json",
+  "error": "EISDIR: illegal operation on a directory, read",
+  "hint": "the file exists but could not be read — check its permissions and that the path is a file, not a directory. this is NOT a syntax problem; the file was never opened"
+}"
+`;
+
+exports[`getOneRepo given: [case8] package.json parses cleanly into a NON-object when: [t0] its root is the json literal \`null\` then: it throws, over a raw TypeError from a \`.name\` read 1`] = `
+"BadRequestError: package.json is not a json object
+
+{
+  "path": "<cwd>/src/.test/assets/nonobject-package/package.json",
+  "found": "null",
+  "hint": "package.json must hold a json OBJECT at its root. the file parsed cleanly, so this is NOT a syntax problem — its top level is the wrong kind of value"
+}"
+`;
+
+exports[`getOneRepo given: [case9] package.json declares a \`name\` of the wrong kind when: [t0] the name field holds a number then: the error names the KIND, never an absence 1`] = `
+"BadRequestError: repo must be a literal string
+
+{
+  "source": "the \`name\` field in package.json",
+  "path": "<cwd>/src/.test/assets/wrongkind-name-package/package.json",
+  "declared": 42,
+  "declaredType": "number",
+  "hint": "the \`name\` field in package.json must hold a literal string, such as \\"svc-raisefloor\\""
+}"
+`;
+
+exports[`getOneRepo given: [case12] package.json declares NO \`name\` key at all when: [t0] the field is genuinely absent then: the error says ABSENT, and tells you to ADD it 1`] = `
+"BadRequestError: package.json name field is absent
+
+{
+  "path": "<cwd>/src/.test/assets/noname-package/package.json",
+  "hint": "add a name field to package.json, or declare a top-level \`repository\` in the config"
+}"
+`;
+
+exports[`getOneRepo given: [case13] package.json declares a \`name\` that is BLANK when: [t0] the field is present and whitespace-only then: the error says EMPTY, never absent 1`] = `
+"BadRequestError: repo is empty
+
+{
+  "source": "the \`name\` field in package.json",
+  "path": "<cwd>/src/.test/assets/blankname-package/package.json",
+  "declared": "   ",
+  "hint": "the \`name\` field in package.json must hold a non-empty value — an empty repo would splice a blank segment and derive an unreachable path"
+}"
+`;

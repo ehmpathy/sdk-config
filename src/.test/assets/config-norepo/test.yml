@@ -1,0 +1,19 @@
+# .what = an `organization` declared, and NO `repository`
+# .why  = this is the fixture that reaches the ergonomic default. with no
+#         `repository` field, `getOneRepo` falls to `package.json`'s `name` —
+#         `sdk-config` at this repo's root — so the derive reads
+#         `/test-org/sdk-config/test/…`.
+#
+#         ⇒ every other fixture declares `repository`, so without this one the
+#           package.json route is never exercised and a build that deleted it
+#           would stay green.
+#
+# ⛔ do NOT add a `repository` key here. this file's whole job is its absence.
+organization: test-org
+database:
+  host: localhost
+  port: 5432
+  password: '$.at(aws::param)'
+api:
+  key: '$.at(aws::secret/shared/api/key)'
+  url: https://api.test.example.com

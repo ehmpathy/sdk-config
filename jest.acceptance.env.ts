@@ -1,6 +1,8 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync } from 'fs';
 import { join } from 'path';
 import util from 'util';
+
+import { useKeyrack } from './src/.test/useKeyrack';
 
 // eslint-disable-next-line no-undef
 jest.setTimeout(90000); // we're calling downstream apis
@@ -16,22 +18,26 @@ if (!existsSync(join(process.cwd(), 'package.json')))
   throw new Error('no package.json found in cwd. are you @gitroot?');
 
 /**
- * .what = verify that the env has sufficient auth to run the tests if aws is used; otherwise, fail fast
- * .why =
- *   - prevent time wasted waiting on tests to fail due to lack of credentials
- *   - prevent time wasted debugging tests which are failing due to hard-to-read missed credential errors
+ * .what = source credentials from keyrack for the test tier, and bar every ambient aws source, in
+ *         one call.
+ * .why = this REPLACED a guard that only ASSERTED `AWS_PROFILE || AWS_ACCESS_KEY_ID` was non-empty
+ *        and never called `keyrack.source()`. on a host with an ambient instance role that assert
+ *        passes while the sdk authenticates against the WRONG ACCOUNT — measured here as account
+ *        261599400667 (`ahbode-camp-grove-role`) where the keyrack profile resolves to
+ *        805192865516 (`ehmpathy-demo-for-grove`). it surfaced as an action-level AccessDenied that
+ *        reads exactly like an iam policy gap.
+ *
+ *        ⛔ do NOT collapse this back to a presence check: a present credential is not a CORRECT
+ *           credential. `useKeyrack` both supplies the right one and bars imds, so the suite runs on
+ *           a keyrack credential or on none at all.
+ *
+ *        every argument is explicit, and each one carries weight:
+ *        - `owner: 'ehmpath'` — always name the rack; the default matches today and may drift.
+ *        - `mode: 'strict'` — keyrack.source has no `unlock` option (rhachet@1.47.5 accepts
+ *          env|owner|key|reach|mode only), so a LOCKED rack grants no key and sets no AWS_PROFILE.
+ *          `lenient` swallows that; `strict` exits 2 and names the key to unlock.
  */
-const declapractUsePath = join(process.cwd(), 'declapract.use.yml');
-const requiresAwsAuth =
-  existsSync(declapractUsePath) &&
-  readFileSync(declapractUsePath, 'utf8').includes('awsAccountId');
-if (
-  requiresAwsAuth &&
-  !(process.env.AWS_PROFILE || process.env.AWS_ACCESS_KEY_ID)
-)
-  throw new Error(
-    'no aws credentials present. please authenticate with aws to run acceptance tests',
-  );
+useKeyrack({ env: 'test', owner: 'ehmpath', mode: 'strict' });
 
 /**
  * .what = verify that required api keys are present; otherwise, fail fast

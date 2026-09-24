@@ -1,0 +1,19 @@
+# .what = a `repository` declared with an npm SCOPE
+# .why  = the clamp on the scope strip. spliced verbatim, `@ehmpathy/svc-x`
+#         derives `/test-org/@ehmpathy/svc-x/test/…` — FIVE segments, no error,
+#         and a path no param lives at.
+#
+#         ⇒ a scope names an ORG, and the org is its own segment, so the scope
+#           is redundant here by construction. the strip removes the trap; this
+#           fixture is what goes red if someone removes the strip.
+#
+# ⛔ do NOT unscope this value. the scope IS the assertion.
+organization: test-org
+repository: '@ehmpathy/svc-x'
+database:
+  host: localhost
+  port: 5432
+  password: '$.at(aws::param)'
+api:
+  key: '$.at(aws::secret/shared/api/key)'
+  url: https://api.test.example.com

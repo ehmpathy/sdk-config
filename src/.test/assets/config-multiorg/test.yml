@@ -1,0 +1,20 @@
+# .what = the `test` choice, declared under org `org-of-test`
+# .why  = its peer `prep.yml` declares a DIFFERENT org on purpose. the org is
+#         read per fill, from whichever config file the choice selects — so two
+#         choices in one repo can name two orgs, and each derives with its own.
+#         every other fixture in this repo agrees on one org, so this pair is
+#         the only place that property is observable.
+#
+# ⛔ do NOT harmonize this org with `prep.yml`'s. two fixtures in one dir that
+#    name two orgs read like a typo, and they are the clamp — make them agree
+#    and `genGetConfig.integration [case29]` passes no matter where the org is
+#    read from. the DISAGREEMENT is the assertion.
+organization: org-of-test
+repository: test-svc
+database:
+  host: localhost
+  port: 5432
+  password: '$.at(aws::param)'
+api:
+  key: '$.at(aws::secret/shared/api/key)'
+  url: https://api.test.example.com

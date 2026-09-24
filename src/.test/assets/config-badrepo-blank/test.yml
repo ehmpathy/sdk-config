@@ -1,0 +1,25 @@
+# .what = a `repository` declared as whitespace only
+# .why  = the repo's twin of `config-badorg-blank`. this is the ONE malformed
+#         value a `typeof` check cannot catch — it IS a literal string, so the
+#         literal guard passes it and only the empty-guard after the trim
+#         refuses it.
+#
+#         ⇒ drop the `.trim()` in `asRepoSegment` and this config boots: the
+#           repo splices a blank segment and derives `/test-org/   /test/…`, a
+#           name aws refuses.
+#
+# .note = the quotes carry weight rather than ride along. unquoted, yaml reads a
+#         whitespace scalar as `null`, which reaches the literal-string throw
+#         instead and proves the wrong sentence.
+#
+# ⛔ do NOT give this a non-blank `repository`, and do NOT unquote the value.
+#    either edit silently retires the clamp.
+organization: test-org
+repository: '   '
+database:
+  host: localhost
+  port: 5432
+  password: '$.at(aws::param)'
+api:
+  key: '$.at(aws::secret/shared/api/key)'
+  url: https://api.test.example.com

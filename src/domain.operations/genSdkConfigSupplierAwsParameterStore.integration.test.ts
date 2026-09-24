@@ -3,11 +3,12 @@ import {
   PutParameterCommand,
   SSMClient,
 } from '@aws-sdk/client-ssm';
-import { ConstraintError, getError } from 'helpful-errors';
+import { ConstraintError, getError, MalfunctionError } from 'helpful-errors';
 import { given, then, useBeforeAll, when } from 'test-fns';
 import { getUuid } from 'uuid-fns';
 
 import { SupplyAbsentError } from '../domain.objects/SupplyError';
+import { asSdkConfigPath } from './asSdkConfigPath';
 import { genSdkConfigSupplierAwsParameterStore } from './genSdkConfigSupplierAwsParameterStore';
 
 /**
@@ -89,6 +90,77 @@ describe('genSdkConfigSupplierAwsParameterStore.integration', () => {
       then('throws a SupplyAbsentError (tolerable not-found)', async () => {
         const error = await getError(supplier.supply({ path: absentPath }));
         expect(error).toBeInstanceOf(SupplyAbsentError);
+      });
+    });
+  });
+
+  given('[case4] the DERIVED four-segment address, put to live aws', () => {
+    if (!hasAwsCredentials()) {
+      throw new ConstraintError(
+        'AWS credentials required for integration test',
+        {
+          hint: 'set AWS_PROFILE or AWS credentials via keyrack',
+        },
+      );
+    }
+
+    const client = new SSMClient({ region: 'us-east-1' });
+    const supplier = genSdkConfigSupplierAwsParameterStore({ client });
+
+    // the address is built by the REAL derive, never hand-typed here
+    const derived = asSdkConfigPath({
+      uri: { scheme: 'aws::param', explicitPath: null },
+      org: 'test-org',
+      repo: 'test-svc',
+      choice: 'test',
+      keyPath: `absent-${getUuid()}`,
+    });
+
+    when('[t0] the shape of the address is checked', () => {
+      then('the derive emitted four segments, org first', () => {
+        expect(derived.split('/')).toHaveLength(5); // a lead '' + 4
+        expect(derived.startsWith('/test-org/test-svc/test/')).toBe(true);
+      });
+    });
+
+    when('[t1] that address is read against the live store', () => {
+      then('aws ACCEPTS the name — absent, never malformed', async () => {
+        // 🔴 this is the half of the round-trip a read-only grant CAN reach,
+        //    and it is the half this change is actually about.
+        //
+        // ⇒ ssm answers a well-formed-but-absent name with
+        //   `ParameterNotFound`, which the supplier raises as a
+        //   `SupplyAbsentError`. it answers a MALFORMED name with
+        //   `ValidationException`, which is a different class entirely
+        //   ([t2] proves ssm really does discriminate, so this pass is not
+        //   vacuous).
+        //
+        // ⇒ so a green here is a live statement by aws that
+        //   `/test-org/test-svc/test/…` IS a name it accepts — which is
+        //   precisely the claim the org segment introduces, and the claim
+        //   no unit test can make.
+        const error = await getError(supplier.supply({ path: derived }));
+        expect(error).toBeInstanceOf(SupplyAbsentError);
+      });
+    });
+
+    when('[t2] a MALFORMED address is read against the live store', () => {
+      then('aws REJECTS it — so [t1] is a real discrimination', async () => {
+        // ⛔ do NOT delete this as a test of aws over a test of us. without
+        //    it, [t1] proves only that SOME error came back, and a build
+        //    whose derive emitted garbage would pass it just as green.
+        //    this case is what makes [t1]'s `SupplyAbsentError` mean
+        //    "accepted" over merely "failed".
+        //
+        // .note = the assertion is on OUR classes, never on aws's text. a
+        //         malformed name surfaces as a `MalfunctionError`, an absent
+        //         one as a `SupplyAbsentError` — two classes, so the
+        //         discrimination holds even when aws rewrites its message.
+        const error = await getError(
+          supplier.supply({ path: '/test org/has spaces' }),
+        );
+        expect(error).not.toBeInstanceOf(SupplyAbsentError);
+        expect(error).toBeInstanceOf(MalfunctionError);
       });
     });
   });

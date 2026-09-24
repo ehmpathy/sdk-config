@@ -6,12 +6,17 @@ import { SupplyDeniedError } from '../domain.objects/SupplyError';
 import { asFilledConfig } from './asFilledConfig';
 
 describe('asFilledConfig', () => {
-  const mockParamSupplier: SdkConfigSupplier = {
+  // .note = FAKES, never mocks — the shape `rule.forbid.unit.remote-boundaries`
+  //         mandates at unit grade. a supplier is injected by contract, so no
+  //         remote boundary is crossed and no jest.fn is needed. each echoes the
+  //         path it was handed, which is what makes the derived ADDRESS
+  //         assertable in a pure test.
+  const fakeParamSupplier: SdkConfigSupplier = {
     scheme: 'aws::param',
     supply: async ({ path }) => `param-value-for-${path}`,
   };
 
-  const mockSecretSupplier: SdkConfigSupplier = {
+  const fakeSecretSupplier: SdkConfigSupplier = {
     scheme: 'aws::secret',
     supply: async ({ path }) => `secret-value-for-${path}`,
   };
@@ -28,14 +33,15 @@ describe('asFilledConfig', () => {
       then('replaces placeholder with supplied value', async () => {
         const result = await asFilledConfig({
           static: staticConfig,
-          suppliers: [mockParamSupplier],
-          repoName: 'svc-x',
+          suppliers: [fakeParamSupplier],
+          org: 'ahbode',
+          repo: 'svc-x',
           choice: 'prod',
         });
         expect(result.filled).toMatchObject({
           database: {
             host: 'localhost',
-            password: 'param-value-for-/svc-x/prod/database.password',
+            password: 'param-value-for-/ahbode/svc-x/prod/database.password',
           },
         });
       });
@@ -56,16 +62,17 @@ describe('asFilledConfig', () => {
       then('replaces all placeholders', async () => {
         const result = await asFilledConfig({
           static: staticConfig,
-          suppliers: [mockParamSupplier, mockSecretSupplier],
-          repoName: 'svc-x',
+          suppliers: [fakeParamSupplier, fakeSecretSupplier],
+          org: 'ahbode',
+          repo: 'svc-x',
           choice: 'prod',
         });
         expect(result.filled).toMatchObject({
           database: {
-            password: 'param-value-for-/svc-x/prod/database.password',
+            password: 'param-value-for-/ahbode/svc-x/prod/database.password',
           },
           api: {
-            key: 'secret-value-for-/svc-x/prod/api.key',
+            key: 'secret-value-for-/ahbode/svc-x/prod/api.key',
           },
         });
       });
@@ -87,8 +94,9 @@ describe('asFilledConfig', () => {
       then('derives correct nested keyPath', async () => {
         const result = await asFilledConfig({
           static: staticConfig,
-          suppliers: [mockSecretSupplier],
-          repoName: 'svc-api',
+          suppliers: [fakeSecretSupplier],
+          org: 'ahbode',
+          repo: 'svc-api',
           choice: 'test',
         });
         expect(result.filled).toMatchObject({
@@ -96,7 +104,7 @@ describe('asFilledConfig', () => {
             stripe: {
               api: {
                 secretKey:
-                  'secret-value-for-/svc-api/test/services.stripe.api.secretKey',
+                  'secret-value-for-/ahbode/svc-api/test/services.stripe.api.secretKey',
               },
             },
           },
@@ -115,8 +123,9 @@ describe('asFilledConfig', () => {
         const error = await getError(async () =>
           asFilledConfig({
             static: staticConfig,
-            suppliers: [mockParamSupplier],
-            repoName: 'svc-x',
+            suppliers: [fakeParamSupplier],
+            org: 'ahbode',
+            repo: 'svc-x',
             choice: 'prod',
           }),
         );
@@ -142,8 +151,9 @@ describe('asFilledConfig', () => {
       then('returns config unchanged', async () => {
         const result = await asFilledConfig({
           static: staticConfig,
-          suppliers: [mockParamSupplier],
-          repoName: 'svc-x',
+          suppliers: [fakeParamSupplier],
+          org: 'ahbode',
+          repo: 'svc-x',
           choice: 'prod',
         });
         expect(result.filled).toEqual(staticConfig);
@@ -171,7 +181,8 @@ describe('asFilledConfig', () => {
         asFilledConfig({
           static: staticConfig,
           suppliers: [deniedParamSupplier],
-          repoName: 'svc-x',
+          org: 'ahbode',
+          repo: 'svc-x',
           choice: 'prod',
         }),
       );
@@ -213,7 +224,8 @@ describe('asFilledConfig', () => {
           asFilledConfig({
             static: staticConfig,
             suppliers: [brokenParamSupplier],
-            repoName: 'svc-x',
+            org: 'ahbode',
+            repo: 'svc-x',
             choice: 'prod',
           }),
         );
@@ -246,7 +258,8 @@ describe('asFilledConfig', () => {
         asFilledConfig({
           static: staticConfig,
           suppliers: [deniedParamSupplier],
-          repoName: 'svc-x',
+          org: 'ahbode',
+          repo: 'svc-x',
           choice: 'prod',
         }),
       );
@@ -267,6 +280,30 @@ describe('asFilledConfig', () => {
           },
         ]);
       });
+
+      then(
+        'and the ARRAY branch threaded the org into the derived path',
+        () => {
+          // 🔴 the only clamp on the array recursion that can SEE the org.
+          //    `asFilledConfig` re-passes `org` at each descent, and the array
+          //    branch is a separate call site from the object branch — so a build
+          //    that dropped it there alone would derive `/svc-x/prod/…` here and
+          //    stay green on every other assertion in this case: the supplier
+          //    keys its deny on `.endsWith('items.0.secret')`, which is
+          //    org-agnostic, and both assertions above read only the SHAPE.
+          //
+          // .note = the address is read off the SupplyDeniedError the supplier
+          //         threw, so no re-derive happens in the test. we map the
+          //         whole array rather than index into it, so the shape is
+          //         asserted alongside the address — exactly one omission,
+          //         and its cause carries the org-scoped path.
+          expect(
+            scene.omissions.map((omission) => omission.cause.message),
+          ).toEqual([
+            expect.stringContaining('/ahbode/svc-x/prod/items.0.secret'),
+          ]);
+        },
+      );
     });
   });
 
@@ -281,8 +318,9 @@ describe('asFilledConfig', () => {
       then('uses explicit path instead of auto-derived', async () => {
         const result = await asFilledConfig({
           static: staticConfig,
-          suppliers: [mockParamSupplier],
-          repoName: 'svc-x',
+          suppliers: [fakeParamSupplier],
+          org: 'ahbode',
+          repo: 'svc-x',
           choice: 'prod',
         });
         expect(result.filled).toMatchObject({

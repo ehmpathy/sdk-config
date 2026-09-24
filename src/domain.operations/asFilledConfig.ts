@@ -1,12 +1,15 @@
 import { BadRequestError, UnexpectedCodePathError } from 'helpful-errors';
 import type { EnvironmentConfigSlug } from 'sdk-environment';
 
+import type { OrgSlug } from '../domain.objects/OrgSlug';
+import type { RepoSlug } from '../domain.objects/RepoSlug';
 import type { SdkConfigSupplier } from '../domain.objects/SdkConfigSupplier';
 import { SupplyDeniedError, SupplyError } from '../domain.objects/SupplyError';
 import type { SupplyOmission } from '../domain.objects/SupplyOmission';
 import { asSdkConfigPath } from './asSdkConfigPath';
 import { asSdkConfigUri } from './asSdkConfigUri';
 import { isRecord } from './isRecord';
+import { isSdkConfigPlaceholder } from './isSdkConfigPlaceholder';
 
 /**
  * .what = recursively fill $.at() placeholders in config object
@@ -25,7 +28,8 @@ import { isRecord } from './isRecord';
 export const asFilledConfig = async (input: {
   static: Record<string, unknown>;
   suppliers: SdkConfigSupplier[];
-  repoName: string;
+  org: OrgSlug;
+  repo: RepoSlug;
   choice: EnvironmentConfigSlug;
 }): Promise<{
   filled: Record<string, unknown>;
@@ -35,7 +39,8 @@ export const asFilledConfig = async (input: {
   const result = await fillRecursive({
     value: input.static,
     suppliers: input.suppliers,
-    repoName: input.repoName,
+    org: input.org,
+    repo: input.repo,
     choice: input.choice,
     keyPath: '',
   });
@@ -62,7 +67,8 @@ export const asFilledConfig = async (input: {
 const fillRecursive = async (input: {
   value: unknown;
   suppliers: SdkConfigSupplier[];
-  repoName: string;
+  org: OrgSlug;
+  repo: RepoSlug;
   choice: EnvironmentConfigSlug;
   keyPath: string;
 }): Promise<{
@@ -71,7 +77,7 @@ const fillRecursive = async (input: {
 }> => {
   // handle string values (potential placeholders)
   if (typeof input.value === 'string') {
-    if (!input.value.startsWith('$.at('))
+    if (!isSdkConfigPlaceholder({ value: input.value }))
       return { value: input.value, omissions: [] };
 
     // parse the uri
@@ -89,7 +95,8 @@ const fillRecursive = async (input: {
     // derive path
     const path = asSdkConfigPath({
       uri,
-      repoName: input.repoName,
+      org: input.org,
+      repo: input.repo,
       choice: input.choice,
       keyPath: input.keyPath,
     });
@@ -121,7 +128,8 @@ const fillRecursive = async (input: {
         fillRecursive({
           value: item,
           suppliers: input.suppliers,
-          repoName: input.repoName,
+          org: input.org,
+          repo: input.repo,
           choice: input.choice,
           keyPath: input.keyPath ? `${input.keyPath}.${index}` : `${index}`,
         }),
@@ -142,7 +150,8 @@ const fillRecursive = async (input: {
         const filled = await fillRecursive({
           value: val,
           suppliers: input.suppliers,
-          repoName: input.repoName,
+          org: input.org,
+          repo: input.repo,
           choice: input.choice,
           keyPath: newKeyPath,
         });

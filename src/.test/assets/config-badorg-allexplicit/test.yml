@@ -1,0 +1,25 @@
+# .what = a MALFORMED `organization`, and EVERY uri is explicit
+# .why  = this is vision `case=4` `[t2]` — the peer of `config-noorg-allexplicit`,
+#         and it parts a different pair. that fixture proves the org is READ when
+#         no derive needs it; this one proves the read is also VALIDATED there.
+#
+#         ⇒ a build could call getOneOrg unconditionally and still short-circuit
+#           its literal check when no path needs the value. that build passes the
+#           noorg fixture (the required-field guard fires first, on `undefined`)
+#           and fails only here, where the field is present and unusable.
+#
+# .note = the value is a placeholder uri on purpose. it is the malformation a
+#         human most plausibly writes — every OTHER value in the file is one, so
+#         `organization` looks like it would be filled the same way. it cannot
+#         be: the org is read before any supplier runs.
+#
+# ⛔ do NOT give this a valid org, and do NOT replace an explicit path with a
+#    bare `$.at(aws::param)`. either edit silently retires the clamp.
+organization: '$.at(aws::param/org)'
+database:
+  host: localhost
+  port: 5432
+  password: '$.at(aws::param/hand/written/db/password)'
+api:
+  key: '$.at(aws::secret/hand/written/api/key)'
+  url: https://api.test.example.com

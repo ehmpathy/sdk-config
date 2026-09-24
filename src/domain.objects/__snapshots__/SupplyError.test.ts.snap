@@ -12,6 +12,6 @@ exports[`SupplyError taxonomy given: [case2] a SupplyAbsentError constructed wit
 "SupplyAbsentError: parameter not found
 
 {
-  "path": "/test-svc/test/database.password"
+  "path": "/test-org/test-svc/test/database.password"
 }"
 `;

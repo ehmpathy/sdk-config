@@ -1,0 +1,11 @@
+# .what = `package.json` here is a DIRECTORY, and this file is what keeps it one
+# .why  = `readFileSync` on a directory throws EISDIR — the third branch of the
+#         read/parse seam, reached by no other fixture. `no-such-dir` reaches
+#         ENOENT, `invalid-package` reaches the parse catch, and this reaches
+#         neither.
+#
+# ⛔ do NOT replace this directory with a file. the moment `package.json` is a
+#    regular file, `getOneRepo.integration.test.ts` `[case7]` stops to test the
+#    branch it was written for, and it goes green either way.
+#
+# .note = git tracks no empty directory, so this placeholder carries real load.

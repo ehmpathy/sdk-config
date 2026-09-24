@@ -1,0 +1,28 @@
+# .what = an `organization` declared as a MAP, not a literal string
+# .why  = `getOneOrg` raises three distinct malformed-org sentences, and only the
+#         placeholder one had reached the orchestration grade. this fixture is
+#         what lets `org must be a literal string` be met through `genGetConfig`
+#         — the surface a config author actually calls.
+#
+#         ⇒ a map is the malformation a human writes when they read
+#           `organization` as a section header rather than a value. spliced raw
+#           it derives `/[object Object]/svc-x/…` — a name aws refuses, three
+#           files from the line that caused it.
+#
+# .note = the uri below is BARE on purpose. an all-explicit peer already exists
+#         (`config-badorg-allexplicit`) and it parts a different build; this one
+#         proves the refusal still precedes the derive that genuinely wants the
+#         value.
+#
+# ⛔ do NOT give this a string `organization`, and do NOT replace the bare
+#    `$.at(aws::param)` with an explicit path. either edit silently retires the
+#    clamp while every other test stays green.
+organization:
+  name: ahbode
+database:
+  host: localhost
+  port: 5432
+  password: '$.at(aws::param)'
+api:
+  key: '$.at(aws::secret/shared/api/key)'
+  url: https://api.test.example.com

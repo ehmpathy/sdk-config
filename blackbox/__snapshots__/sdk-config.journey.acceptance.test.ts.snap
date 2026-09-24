@@ -18,6 +18,22 @@ exports[`sdk-config.journey given: [journey] developer configures application wi
     "password": "$.at(aws::param)",
     "port": 5432,
   },
+  "organization": "test-org",
+  "repository": "journey-app",
+}
+`;
+
+exports[`sdk-config.journey given: [journey] developer configures application with typed secrets when: [t0] genGetConfig is called with schema and suppliers when: [t2] getConfig() fills secrets from real AWS then: and the FILLED SHAPE a caller receives is pinned, masked 1`] = `
+{
+  "api": {
+    "key": Any<String>,
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": Any<String>,
+    "port": 5432,
+  },
 }
 `;
 
