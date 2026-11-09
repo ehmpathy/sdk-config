@@ -1,5 +1,5 @@
 import { BadRequestError } from 'helpful-errors';
-import { type SimpleSyncCache, withSimpleCache } from 'with-simple-cache';
+import { type SimpleCacheSync, withSimpleCache } from 'with-simple-cache';
 import type { z } from 'zod';
 
 import type { SdkConfigEnvironment } from '../domain.objects/SdkConfigEnvironment';
@@ -17,7 +17,7 @@ import { isFailfastEnvironment } from './isFailfastEnvironment';
 export const genGetConfig = <TSchema extends z.ZodType>(input: {
   schema: TSchema;
   statics: string;
-  cache: SimpleSyncCache<unknown>;
+  cache: SimpleCacheSync<unknown>;
   suppliers: SdkConfigSupplier[];
   environment: SdkConfigEnvironment;
 

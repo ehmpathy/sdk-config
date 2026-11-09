@@ -81,6 +81,90 @@ exports[`genGetConfig given: [case6] unknown supplier when: [t0] config uses sch
 }"
 `;
 
+exports[`genGetConfig given: [case8] an iso-time simple-in-memory-cache when: [t0] getConfig() is called with a 0.5.1 createCache({ expiration }) then: config matches snapshot 1`] = `
+{
+  "api": {
+    "key": "secret:/shared/api/key",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": "param:/test-org/test-svc/test/database.password",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`genGetConfig given: [case8] an iso-time simple-in-memory-cache when: [t1] getConfig() is called with a 0.4.2 createCache({ expiration }) then: config matches snapshot 1`] = `
+{
+  "api": {
+    "key": "secret:/shared/api/key",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": "param:/test-org/test-svc/test/database.password",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`genGetConfig given: [case8] an iso-time simple-in-memory-cache when: [t2] a cache that takes only an object-shaped expiration then: config matches snapshot 1`] = `
+{
+  "api": {
+    "key": "secret:/shared/api/key",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": "param:/test-org/test-svc/test/database.password",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`genGetConfig given: [case8] an iso-time simple-in-memory-cache when: [t3] getConfig() is called twice on a 0.5.1 cache then: the hit returns the config the fill produced 1`] = `
+{
+  "api": {
+    "key": "secret:/shared/api/key",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": "param:/test-org/test-svc/test/database.password",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`genGetConfig given: [case8] an iso-time simple-in-memory-cache when: [t4] getConfig() is called three times at once on a cold 0.5.1 cache then: each concurrent call returns the filled config 1`] = `
+{
+  "api": {
+    "key": "secret:/shared/api/key",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": "param:/test-org/test-svc/test/database.password",
+    "port": 5432,
+  },
+}
+`;
+
+exports[`genGetConfig given: [case8] an iso-time simple-in-memory-cache when: [t5] getConfig() is called after the 0.5.1 cache entry expires then: the hit and the refill each return the filled config 1`] = `
+{
+  "api": {
+    "key": "secret:/shared/api/key",
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": "param:/test-org/test-svc/test/database.password",
+    "port": 5432,
+  },
+}
+`;
+
 exports[`genGetConfig given: [case9] multiple suppliers when: [t0] config uses both aws::param and aws::secret then: config matches snapshot 1`] = `
 {
   "api": {

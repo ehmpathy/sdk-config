@@ -1,6 +1,8 @@
 ignorePatterns:
   - ".agent"
 ignores:
+  # npm-alias devDep (npm:simple-in-memory-cache@0.4.2); depcheck maps its import to the real name, so it reads as unused
+  - simple-in-memory-cache-v042
   - depcheck
   - declapract
   - declapract-typescript-ehmpathy

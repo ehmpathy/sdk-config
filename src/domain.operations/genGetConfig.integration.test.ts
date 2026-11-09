@@ -1,4 +1,6 @@
 import { BadRequestError, getError } from 'helpful-errors';
+import { createCache as createInMemoryCache } from 'simple-in-memory-cache';
+import { createCache as createInMemoryCacheV042 } from 'simple-in-memory-cache-v042';
 import { given, then, useBeforeAll, when } from 'test-fns';
 import { z } from 'zod';
 
@@ -14,6 +16,12 @@ import type { SupplyTolerance } from '../domain.objects/SupplyTolerance';
 import { genGetConfig } from './genGetConfig';
 
 const TEST_CONFIG_DIR = join(__dirname, '../.test/assets/config');
+
+/**
+ * .what = the cache input genGetConfig declares
+ * .why = the [case8] clamp binds to the real input; a renamed key fails here, loud
+ */
+type GenGetConfigCacheInput = Parameters<typeof genGetConfig>[0]['cache'];
 
 /**
  * .what = redact the host path from a message, so its snapshot is portable
@@ -268,6 +276,213 @@ describe('genGetConfig', () => {
     });
   });
 
+  given('[case8] an iso-time simple-in-memory-cache', () => {
+    // the two iso-time lines an adopter may hold (wish: 0.4.2 / 0.5.1)
+    const isoTimeCaches = [
+      { label: '[t0]', version: '0.5.1', create: createInMemoryCache },
+      { label: '[t1]', version: '0.4.2', create: createInMemoryCacheV042 },
+    ];
+    isoTimeCaches.forEach(({ label, version, create }) => {
+      when(
+        `${label} getConfig() is called with a ${version} createCache({ expiration })`,
+        () => {
+          const getConfig = genGetConfig({
+            schema: testSchema,
+            statics: `${TEST_CONFIG_DIR}/*.yml`,
+            cache: create({ expiration: { minutes: 5 } }),
+            suppliers: [fakeParamSupplier, fakeSecretSupplier],
+            environment: testEnv,
+          });
+
+          const result = useBeforeAll(async () => getConfig());
+
+          then('config fills through the iso-time cache', () => {
+            expect(result.database.password).toContain('param:');
+            expect(result.api.key).toContain('secret:');
+          });
+
+          then('config matches snapshot', () => {
+            expect(result).toMatchSnapshot();
+          });
+        },
+      );
+    });
+
+    when('[t2] a cache that takes only an object-shaped expiration', () => {
+      // c3's hermetic stand-in: simple-in-memory-cache@0.4.0's shape, where `UniDuration` resolves.
+      // its `expiration` cannot hold IsoDurationWords ('PT5M')
+      const store = new Map<string, unknown>();
+      const cacheObjectExpirationOnly = {
+        get: (key: string) => store.get(key),
+        set: (
+          key: string,
+          value: unknown,
+          _options?: { expiration?: { minutes?: number } | null },
+        ) => {
+          store.set(key, value);
+        },
+      };
+
+      // clamp lives in test:types — a non-iso-time contract accepts this cache, so tsc fails
+      // @ts-expect-error — IsoDurationWords is not assignable to { minutes?: number }
+      const _cacheRefused: GenGetConfigCacheInput = cacheObjectExpirationOnly;
+
+      // the same cache, past the type gate, to prove the refusal is type-only
+      const getConfig = genGetConfig({
+        schema: testSchema,
+        statics: `${TEST_CONFIG_DIR}/*.yml`,
+        // @ts-expect-error — the same refusal, at the call site
+        cache: cacheObjectExpirationOnly,
+        suppliers: [fakeParamSupplier, fakeSecretSupplier],
+        environment: testEnv,
+      });
+
+      const result = useBeforeAll(async () => getConfig());
+
+      then(
+        'pins the wish\'s "no runtime break": sdk-config passes no expiration, so the fill runs',
+        () => {
+          expect(result.database.password).toContain('param:');
+          expect(result.api.key).toContain('secret:');
+        },
+      );
+
+      then('config matches snapshot', () => {
+        expect(result).toMatchSnapshot();
+      });
+    });
+
+    /**
+     * .what = a getConfig on a fresh 0.5.1 cache, with a param supplier that records each path it supplies
+     * .why = [t3]–[t5] read the supplier calls a fill makes, to tell a cache hit from a refill
+     * .note = deliberate mutation — the recorded path list is the probe of a supplier call
+     */
+    const genRecordedGetConfig = (input: {
+      expiration: { minutes: number } | { seconds: number };
+    }): {
+      getConfig: ReturnType<typeof genGetConfig<typeof testSchema>>;
+      pathsSupplied: readonly string[];
+    } => {
+      const pathsSupplied: string[] = [];
+      const recordedParamSupplier: SdkConfigSupplier = {
+        scheme: 'aws::param',
+        supply: async ({ path }: { path: string }): Promise<string> => {
+          pathsSupplied.push(path);
+          return `param:${path}`;
+        },
+      };
+      const getConfig = genGetConfig({
+        schema: testSchema,
+        statics: `${TEST_CONFIG_DIR}/*.yml`,
+        cache: createInMemoryCache({ expiration: input.expiration }),
+        suppliers: [recordedParamSupplier, fakeSecretSupplier],
+        environment: testEnv,
+      });
+      return { getConfig, pathsSupplied };
+    };
+
+    when('[t3] getConfig() is called twice on a 0.5.1 cache', () => {
+      const calls = useBeforeAll(async () => {
+        const subject = genRecordedGetConfig({ expiration: { minutes: 5 } });
+        const configFirst = await subject.getConfig();
+        const countAfterFirst = subject.pathsSupplied.length;
+        const configSecond = await subject.getConfig();
+        return {
+          configFirst,
+          configSecond,
+          countAfterFirst,
+          countAfterSecond: subject.pathsSupplied.length,
+        };
+      });
+
+      then(
+        'the second call hits the iso-time cache, with no supplier call',
+        () => {
+          expect(calls.countAfterFirst).toBeGreaterThan(0);
+          expect(calls.countAfterSecond).toEqual(calls.countAfterFirst);
+        },
+      );
+
+      then('the hit returns the config the fill produced', () => {
+        expect(calls.configSecond).toEqual(calls.configFirst);
+        expect(calls.configSecond).toMatchSnapshot();
+      });
+    });
+
+    when(
+      '[t4] getConfig() is called three times at once on a cold 0.5.1 cache',
+      () => {
+        // baseline: one cold fill on a sibling instance — its supplier calls and its config
+        const baseline = useBeforeAll(async () => {
+          const sibling = genRecordedGetConfig({ expiration: { minutes: 5 } });
+          const config = await sibling.getConfig();
+          return { config, oneFillCount: sibling.pathsSupplied.length };
+        });
+
+        // the act: three concurrent cold calls on the subject
+        const concurrent = useBeforeAll(async () => {
+          const subject = genRecordedGetConfig({ expiration: { minutes: 5 } });
+          const configs = await Promise.all([
+            subject.getConfig(),
+            subject.getConfig(),
+            subject.getConfig(),
+          ]);
+          return { configs, count: subject.pathsSupplied.length };
+        });
+
+        then('the concurrent calls share one fill', () => {
+          expect(baseline.oneFillCount).toBeGreaterThan(0);
+          expect(concurrent.count).toEqual(baseline.oneFillCount);
+        });
+
+        then('each concurrent call returns the filled config', () => {
+          concurrent.configs.forEach((config) =>
+            expect(config).toEqual(baseline.config),
+          );
+          expect(concurrent.configs[0]).toMatchSnapshot();
+        });
+      },
+    );
+
+    when(
+      '[t5] getConfig() is called after the 0.5.1 cache entry expires',
+      () => {
+        const calls = useBeforeAll(async () => {
+          const subject = genRecordedGetConfig({ expiration: { seconds: 1 } });
+          const configFirst = await subject.getConfig();
+          const firstFillCount = subject.pathsSupplied.length;
+          const configInTtl = await subject.getConfig();
+          const inTtlCount = subject.pathsSupplied.length;
+          await new Promise((resolve) => setTimeout(resolve, 1100));
+          const configRefilled = await subject.getConfig();
+          return {
+            configFirst,
+            configInTtl,
+            configRefilled,
+            firstFillCount,
+            inTtlCount,
+            refillCount: subject.pathsSupplied.length,
+          };
+        });
+
+        then(
+          'the call after the iso-time ttl refills from the suppliers',
+          () => {
+            expect(calls.firstFillCount).toBeGreaterThan(0);
+            expect(calls.inTtlCount).toEqual(calls.firstFillCount); // a hit inside the ttl
+            expect(calls.refillCount).toEqual(calls.firstFillCount * 2); // a refill past it
+          },
+        );
+
+        then('the hit and the refill each return the filled config', () => {
+          expect(calls.configInTtl).toEqual(calls.configFirst);
+          expect(calls.configRefilled).toEqual(calls.configFirst);
+          expect(calls.configRefilled).toMatchSnapshot();
+        });
+      },
+    );
+  });
+
   given('[case9] multiple suppliers', () => {
     when('[t0] config uses both aws::param and aws::secret', () => {
       const getConfig = genGetConfig({
@@ -350,7 +565,8 @@ describe('genGetConfig', () => {
     });
 
     when('[t0] schema mismatch in prod/cloud env', () => {
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      // a spy, not a mute: the real console.warn still runs (rule.forbid.integration.mocks)
+      const warnSpy = jest.spyOn(console, 'warn');
 
       const getConfig = genGetConfig({
         schema: badSchema,
@@ -509,9 +725,8 @@ describe('genGetConfig', () => {
       });
 
       when('[t0] getConfig() is called in prod/cloud', () => {
-        const warnSpy = jest
-          .spyOn(console, 'warn')
-          .mockImplementation(() => {});
+        // a spy, not a mute: the real console.warn still runs (rule.forbid.integration.mocks)
+        const warnSpy = jest.spyOn(console, 'warn');
 
         const getConfig = genGetConfig({
           schema: testSchema,
