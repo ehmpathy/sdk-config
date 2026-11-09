@@ -11,6 +11,8 @@ import {
 import { join } from 'path';
 
 import { BadRequestError, ConstraintError, getError } from 'helpful-errors';
+import { createCache as createInMemoryCache } from 'simple-in-memory-cache';
+import { createCache as createInMemoryCacheV042 } from 'simple-in-memory-cache-v042';
 import { given, then, useBeforeAll, when } from 'test-fns';
 import { getUuid } from 'uuid-fns';
 import { z } from 'zod';
@@ -35,10 +37,10 @@ const TEST_CONFIG_DIR = join(__dirname, '../src/.test/assets/config');
  * .why = 🔴 a COMPILE-TIME clamp on F9's two new contract exports, and it is the
  *        only kind that can reach them. a type export has no runtime presence,
  *        so no `expect` can assert it — delete the `export type` line from
- *        `src/index.ts` and every other test stays green.
+ *        `src/contract/sdk.ts` and every other test stays green.
  *
  * .note = it sits in BLACKBOX deliberately, over the in-repo acceptance suite.
- *         this file imports `@src/index`, the built entrypoint, so the clamp
+ *         this file imports `@src/contract/sdk`, the package entrypoint (`main`), so the clamp
  *         grades what a consumer actually receives — a type that fails to
  *         survive the build into the published `.d.ts` breaks HERE and nowhere
  *         else.
@@ -195,12 +197,14 @@ describe('sdk-config', () => {
       server: 'local@unix',
     });
 
+    // a real iso-time cache (simple-in-memory-cache 0.5.1), through the public contract
     const getConfig = genGetConfig({
       schema: testSchema,
       statics: `${TEST_CONFIG_DIR}/*.yml`,
-      cache: createCache(),
+      cache: createInMemoryCache({ expiration: { minutes: 5 } }),
       suppliers: [paramSupplier, secretSupplier],
-      environment: testEnv,    });
+      environment: testEnv,
+    });
 
     when('[t0] getConfig() is called', () => {
       const result = useBeforeAll(async () => getConfig());
@@ -503,7 +507,7 @@ describe('sdk-config', () => {
   // supplier reports a TOLERABLE error (denied/absent) is omitted, not fatal; a
   // required field with the same error hard-throws with the denied path. real AWS
   // still fills database.password; a custom secret supplier (built from the public
-  // SupplyDeniedError/SupplyAbsentError taxonomy exported from @src/index) reports
+  // SupplyDeniedError/SupplyAbsentError taxonomy exported from @src/contract/sdk) reports
   // the tolerable error for api.key. this proves the tolerance contract holds for a
   // consumer of the published package, not just the in-source contract layer.
   const optionalApiSchema = z.object({
@@ -1113,6 +1117,82 @@ describe('sdk-config', () => {
 
       then('and aws was never reached at all', () => {
         expect(pathsBlank).toEqual([]);
+      });
+    });
+  });
+
+  given('[case16] an adopter on simple-in-memory-cache 0.4.2, real AWS suppliers', () => {
+    const testEnv = new SdkConfigEnvironment({
+      config: 'test',
+      server: 'local@unix',
+    });
+
+    // a spy in front of the real ssm supplier — it notes each path, then delegates.
+    // .note = a spy, never a mock — it delegates (rule.forbid.acceptance.mocks).
+    const pathsSupplied: string[] = [];
+    const notedParamSupplier: SdkConfigSupplier = {
+      scheme: 'aws::param',
+      supply: async ({ path }) => {
+        pathsSupplied.push(path);
+        return paramSupplier.supply({ path });
+      },
+    };
+
+    // 0.4.2 is the oldest simple-in-memory-cache release on iso-time
+    const getConfig = genGetConfig({
+      schema: testSchema,
+      statics: `${TEST_CONFIG_DIR}/*.yml`,
+      cache: createInMemoryCacheV042({ expiration: { minutes: 5 } }),
+      suppliers: [notedParamSupplier, secretSupplier],
+      environment: testEnv,
+    });
+
+    when('[t0] getConfig() is called', () => {
+      const scene = useBeforeAll(async () => ({
+        config: await getConfig(),
+        countAfterFill: pathsSupplied.length,
+      }));
+
+      then('the config fills from real SSM and Secrets Manager', () => {
+        expect(scene.config.database.password).toEqual(testParamValue);
+        expect(scene.config.api.key).toEqual(testSecretValue);
+        expect(scene.countAfterFill).toBeGreaterThan(0);
+      });
+
+      then('the filled shape is pinned, masked', () => {
+        expect(scene.config).toMatchSnapshot({
+          api: { key: expect.any(String) },
+          database: { password: expect.any(String) },
+        });
+      });
+    });
+
+    when('[t1] getConfig() is called on a warm cache', () => {
+      // warm the cache here too, so [t1] stands alone on a narrowed run (a hit if [t0] ran)
+      const scene = useBeforeAll(async () => {
+        const configWarm = await getConfig();
+        const pathsAfterFill = [...pathsSupplied];
+        const config = await getConfig();
+        return { configWarm, config, pathsAfterFill, pathsAfterHit: [...pathsSupplied] };
+      });
+
+      then('it hits the 0.4.2 cache — ssm is not read again', () => {
+        expect(scene.pathsAfterFill.length).toBeGreaterThan(0);
+        expect(scene.pathsAfterHit).toEqual(scene.pathsAfterFill);
+        expect({
+          pathsAfterFill: scene.pathsAfterFill,
+          pathsAfterHit: scene.pathsAfterHit,
+        }).toMatchSnapshot();
+      });
+
+      then('the hit returns the config the fill produced', () => {
+        expect(scene.config).toEqual(scene.configWarm);
+        expect(scene.config.database.password).toEqual(testParamValue);
+        expect(scene.config.api.key).toEqual(testSecretValue);
+        expect(scene.config).toMatchSnapshot({
+          api: { key: expect.any(String) },
+          database: { password: expect.any(String) },
+        });
       });
     });
   });

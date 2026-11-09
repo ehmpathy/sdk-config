@@ -67,7 +67,7 @@ uri replacement patterns:
 
 | pattern | behavior |
 |---------|----------|
-| `$.at(aws::param)` | auto-resolves path from org + repo + access + config key path |
+| `$.at(aws::param)` | auto-resolves path from org + repo + `environment.config` + config key path |
 | `$.at(aws::param/exact/path)` | explicit ssm parameter path |
 | `$.at(aws::secret)` | auto-resolves from aws secrets manager |
 | `$.at(aws::secret/exact/path)` | explicit secrets manager path |
@@ -78,7 +78,7 @@ a scheme must match a registered supplier's `.scheme` exactly. any other scheme 
 
 **auto-resolution example:**
 
-for org `ehmpathy`, a repo named `svc-raisefloor`, with `environment.access = 'prod'` and config key `database.password`:
+for org `ehmpathy`, a repo named `svc-raisefloor`, with `environment.config = 'prod'` and config key `database.password`:
 - `$.at(aws::param)` resolves to ssm path `/ehmpathy/svc-raisefloor/prod/database.password`
 - `$.at(aws::secret)` resolves to secret `/ehmpathy/svc-raisefloor/prod/database.password`
 
@@ -241,7 +241,9 @@ caller can branch on `reason` to tell "fix the IAM grant" (denied) from "fix a t
 
 ## cache
 
-built-in support for `with-simple-cache` interfaces. caller supplies any cache implementation.
+the `cache` input is a `with-simple-cache` `SimpleCacheSync` (0.17.x, iso-time durations) — a **sync** cache. caller supplies any sync cache that fits it — e.g. `simple-in-memory-cache` >= 0.4.2.
+
+migration from sdk-config <= 0.3.x: a cache whose `expiration` is uni-time (`simple-in-memory-cache` < 0.4.2) may fail tsc at the `cache:` line, where its `UniDuration` type resolves. bump it to `simple-in-memory-cache` >= 0.4.2. a cache you typed yourself against with-simple-cache's `SimpleSyncCache` fails on the import: 0.17 names it `SimpleCacheSync`.
 
 ```ts
 // in-memory cache (secure, per-process)
@@ -249,24 +251,14 @@ import { createCache } from 'simple-in-memory-cache';
 
 export const getConfig = genGetConfig({
   schema,
+  statics: 'config/*.{json5,yml}',
   cache: createCache({ expiration: { minutes: 5 } }),
+  suppliers: [genSdkConfigSupplierAwsParameterStore()],
   environment,
 });
 ```
 
-```ts
-// dynamodb cache (shared across lambda invocations)
-import { createCache } from '@ehmpathy/simple-dynamodb-cache';
-
-export const getConfig = genGetConfig({
-  schema,
-  cache: createCache({
-    dynamodbTableName: 'my-cache-table',
-    expiration: { minutes: 5 },
-  }),
-  environment,
-});
-```
+⚠️ an **async** cache (e.g. `@ehmpathy/simple-dynamodb-cache`) is not supported: `genGetConfig` wraps the fill with the sync `withSimpleCache`, so an async cache's `get` returns a promise that reads as a hit, and the fill never runs. tsc does not catch this — the input's `get` returns `unknown`.
 
 ## 🔧 mechs
 
@@ -276,9 +268,9 @@ export const getConfig = genGetConfig({
 genGetConfig<T>(input: {
   schema: ZodSchema<T>,
   statics: string, // glob pattern for config files (json5 or yaml)
-  cache: SimpleCache,
+  cache: SimpleCacheSync, // from with-simple-cache 0.17.x (iso-time)
   suppliers: SdkConfigSupplier[],
-  environment: { access: string, server: string, commit: string },
+  environment: SdkConfigEnvironment, // { config: 'test' | 'prep' | 'prod', server: 'local@unix' | 'cloud@aws.lambda' | … }
 }): () => Promise<T>
 ```
 

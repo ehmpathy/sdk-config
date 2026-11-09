@@ -208,3 +208,42 @@ exports[`sdk-config given: [case15] a MALFORMED organization refuses to boot whe
   "hint": "the \`organization\` field declared in the config must hold a non-empty value. to opt a repo out of a shared namespace, declare a placeholder such as \\"_\\" — an empty org would splice a blank segment and derive an unreachable path"
 }"
 `;
+
+exports[`sdk-config given: [case16] an adopter on simple-in-memory-cache 0.4.2, real AWS suppliers when: [t0] getConfig() is called then: the filled shape is pinned, masked 1`] = `
+{
+  "api": {
+    "key": Any<String>,
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": Any<String>,
+    "port": 5432,
+  },
+}
+`;
+
+exports[`sdk-config given: [case16] an adopter on simple-in-memory-cache 0.4.2, real AWS suppliers when: [t1] getConfig() is called on a warm cache then: it hits the 0.4.2 cache — ssm is not read again 1`] = `
+{
+  "pathsAfterFill": [
+    "/test-org/test-svc/test/database.password",
+  ],
+  "pathsAfterHit": [
+    "/test-org/test-svc/test/database.password",
+  ],
+}
+`;
+
+exports[`sdk-config given: [case16] an adopter on simple-in-memory-cache 0.4.2, real AWS suppliers when: [t1] getConfig() is called on a warm cache then: the hit returns the config the fill produced 1`] = `
+{
+  "api": {
+    "key": Any<String>,
+    "url": "https://api.test.example.com",
+  },
+  "database": {
+    "host": "localhost",
+    "password": Any<String>,
+    "port": 5432,
+  },
+}
+`;
