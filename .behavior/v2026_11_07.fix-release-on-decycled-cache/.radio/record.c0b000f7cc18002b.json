@@ -1,0 +1,19 @@
+{
+  "key": "c0b000f7cc18002b",
+  "kind": "create",
+  "repo": {
+    "owner": "ehmpathy",
+    "name": "sdk-config"
+  },
+  "exid": null,
+  "title": "fix(cache): fill async caches, without replay or key collision",
+  "description": "## .outcome\n\ngenGetConfig accepts an async cache (e.g. `@ehmpathy/simple-dynamodb-cache`) and fills it. a failed fill is never replayed. two genGetConfig instances on one shared cache never collide.\n\nfast follow to #21, at the commander's ask: https://github.com/ehmpathy/sdk-config/pull/21#discussion_r4613856911\n\n## .the gap\n\n`src/domain.operations/genGetConfig.ts` wraps the async fill with the sync `withSimpleCache`, which caches the promise:\n\n- an async cache's `get` returns a promise that reads as a hit, so the fill never runs and `getConfig()` resolves `undefined`\n- a rejected fill is cached and replayed until the entry expires\n- the wrapped fn takes no args, so its key is `JSON.stringify(undefined)`; two instances on one cache collide\n\n## .the shape of the fix\n\n- swap to `withSimpleCacheAsync`; widen the input to `SimpleCache<unknown>` (sync or async)\n  - a probe of with-simple-cache 0.17.3 shows it accepts sync caches, dedups in-flight calls, and stores no rejection, so the contract only widens\n- key the cache explicitly, from the org/repo/environment config choice\n- tests: an async cache fills; a failed fill retries; two instances share one cache; concurrent cold calls fill once\n- readme: drop the async-cache caveat; restore an async cache example\n\n## .done means\n\n- a pr open at the commander review, checks green; never released before his approval",
+  "status": null,
+  "via": "gh.issues",
+  "auth": "as-human",
+  "idem": null,
+  "heldSeq": 1,
+  "recordStatus": "DELIVERED",
+  "reason": null,
+  "deliveredExid": "22"
+}

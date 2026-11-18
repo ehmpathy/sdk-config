@@ -241,9 +241,7 @@ caller can branch on `reason` to tell "fix the IAM grant" (denied) from "fix a t
 
 ## cache
 
-the `cache` input is a `with-simple-cache` `SimpleCacheSync` (0.17.x, iso-time durations) — a **sync** cache. caller supplies any sync cache that fits it — e.g. `simple-in-memory-cache` >= 0.4.2.
-
-migration from sdk-config <= 0.3.x: a cache whose `expiration` is uni-time (`simple-in-memory-cache` < 0.4.2) may fail tsc at the `cache:` line, where its `UniDuration` type resolves. bump it to `simple-in-memory-cache` >= 0.4.2. a cache you typed yourself against with-simple-cache's `SimpleSyncCache` fails on the import: 0.17 names it `SimpleCacheSync`.
+the `cache` input takes any sync `with-simple-cache` `SimpleCacheSync`, e.g. `simple-in-memory-cache` >= 0.4.2.
 
 ```ts
 // in-memory cache (secure, per-process)
@@ -258,7 +256,7 @@ export const getConfig = genGetConfig({
 });
 ```
 
-⚠️ an **async** cache (e.g. `@ehmpathy/simple-dynamodb-cache`) is not supported: `genGetConfig` wraps the fill with the sync `withSimpleCache`, so an async cache's `get` returns a promise that reads as a hit, and the fill never runs. tsc does not catch this — the input's `get` returns `unknown`.
+🟡 async caches (e.g. `@ehmpathy/simple-dynamodb-cache`) are not supported, and tsc does not catch them.
 
 ## 🔧 mechs
 
